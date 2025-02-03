@@ -4,7 +4,7 @@
 
 As a designer, I collect dozens of screenshots every day. Every time I see something I like, I immediately save it into my screenshots folder. Over the years, these collections have grown into thousands of images, and I needed a solution to easily search through them and quickly surface the screenshots I need.
 
-じ Personal is your personal, local photo management solution—no cloud required. Take complete ownership of your files and keep your screenshots and images right where they belong: on your own device.
+じ Personal is your personal, local photo management solution—no cloud required. Take complete ownership of your files and keep your screenshots and images right where they belong: in a screenshots folder on your messy desktop.
 
 ## Overview
 
