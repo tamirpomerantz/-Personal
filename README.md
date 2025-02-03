@@ -1,31 +1,31 @@
 # じ Personal
 
+![Screenshot of じ Personal](screenshot.gif)
+
 **じ Personal** is your personal, local photo management solution—no cloud required. Take complete ownership of your files and keep your screenshots and images right where they belong: on your own device.
 
 ## Overview
 
 **じ Personal** is a Node.js server that:
 - Scans your local screenshots folder for image files.
-- Resizes images if necessary.
 - Uses OCR to extract text.
 - Sends images to the OpenAI API to generate searchable tags based on a predefined prompt.
 - Serves your images and metadata through a set of API endpoints.
 
-This project is designed for those who value privacy and want to keep their data local.
-
 ## Folder Structure
 
-Place the **server** folder inside the folder that contains your screenshots. The expected structure is:
-
+Place the **じ Personal** folder inside the folder that contains your screenshots. The expected structure is:
+ ```
 /screenshots
 ├── [your image files…]
 └── じ Personal
-    ├── public
+    ├── public/
     ├── server.js
     ├── images.json
     ├── package.json
     ├── .env
     └── README.md
+```
 
 **Note:** The server code expects the screenshots folder to be one level above it.
 
@@ -38,7 +38,7 @@ Place the **server** folder inside the folder that contains your screenshots. Th
 ## Installation
 
 1. **Clone or copy** this repository into your screenshots folder.
-2. Open a terminal in the `server` folder.
+2. Open a terminal in the `じ Personal` folder.
 3. Install the required Node.js dependencies by running:
 
  ```bash
@@ -46,12 +46,13 @@ Place the **server** folder inside the folder that contains your screenshots. Th
    ```
 ## Installation
 
-   Create a .env file in the server folder with your OpenAI API key:
+   Create a .env file in the じ Personal folder with your OpenAI API key:
  ```bash
 OPENAI_API_KEY=your-api-key-here
    ```
 
    This key is required for generating tags via the OpenAI API.
+
 
 ## Running the Server
 

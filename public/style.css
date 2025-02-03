@@ -1,205 +1,172 @@
-/* Reset margin and padding for body and html, prevent horizontal overflow */
-body, html {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  color: inherit;
-}
-
-:root {
-  --size-base: 4px;
-  --font-family: "HelveticaNeue-light", "Helvetica Neue Light",
-      "Helvetica Neue", Helvetica, "inter", Arial, "Lucida Grande", sans-serif;
-
-  --space-s:calc(var(--size-base));
-  --space-m:calc(var(--size-base)*2);
-  --space-l:calc(var(--size-base)*3);
-  --space-xl:calc(var(--size-base)*4);
-  --space-xxl:calc(var(--size-base)*6);
-
-  --radius-s: calc(var(--size-base));
-  --radius-m: calc(var(--size-base)*2);
-  --radius-l: calc(var(--size-base)*4);
-  --radius-xl: calc(var(--size-base)*6);
-
-  --transition-linear:all 0.2s linear;
-  --transition-move:all 0.3s ease-out;
-}
-
-html,
-[data-theme="light"] {
-  --color-primary: #0066F4;
-  --color-hover-base: rgba(23,77,100,1);
-  --color-secondary: #EF89FD;
-  --color-primary-background: #ffffff;
-  --color-content-background: color-mix(in srgb, var(--color-hover-base) 5%, transparent);
-  --color-hover: color-mix(in srgb, var(--color-hover-base) 5%, transparent);
-  --color-primary-foreground: rgba(0,0,0,0.9);
-  --color-primary-negative: rgba(255,255,255,0.9);
-  --color-secondary-foreground: rgba(0,0,0,0.6);
-  --color-tertiary-foreground: rgba(0,0,0,0.4);
-  --color-border-primary:  rgba(0,0,0,0.1);
-  --color-border-secondary: rgba(0,0,0,0.15);
-}
-
-
-/*
-  2. Remove default margin
-*/
-* {
-  margin: 0;
-}
-
-/*
-  3. Allow percentage-based heights in the application
-*/
-html,
-body {
-  min-height: 100%;
-}
-
-/*
-  Typographic tweaks!
-  4. Add accessible line-height
-  5. Improve text rendering
-*/
-body {
-  -webkit-font-smoothing: antialiased;
-}
-
-
-/* Styles for the image gallery */
-#image-gallery .row div {
-  border-radius: var(--radius-m);
-  background-position: center center;
-  transform: translate(0px,0px) rotate(0deg);
-  transition: all .2s ease-out;
-  box-shadow:
-      0px 0.3px 1.7px -2px rgba(0, 0, 0, 0.028),
-      0px 0.9px 5.6px -2px rgba(0, 0, 0, 0.042),
-      0px 4px 25px -2px rgba(0, 0, 0, 0.07);
-}
-
-#image-gallery .row div:hover {
-  box-shadow:
-      0px 0.3px 6px -2px rgba(0, 0, 0, 0.028),
-      0px 0.9px 12px -2px rgba(0, 0, 0, 0.042),
-      0px 4px 48px -2px rgba(0, 0, 0, 0.07);
-}
-
-#image-gallery .row div.hover-int-1:hover {
-  transform: translate(-4px,8px) rotate(1deg);
-}
-#image-gallery .row div.hover-int-2:hover {
-  transform: translate(4px,-8px) rotate(1deg);
-}
-#image-gallery .row div.hover-int-3:hover {
-  transform: translate(4px,8px) rotate(1deg);
-}
-#image-gallery .row div.hover-int-4:hover {
-  transform: translate(-4px,-8px) rotate(1deg);
-}
-
-
-
-
-@keyframes mainTitleAnimation {
-  0% {
-    filter: blur(100px);
-  font-size: clamp(40px, 10vw, 200px);
-    
-    opacity: 0;
-    height: 80vh; /* Shrink to line height */
+/* ===================================================
+   1. RESET & BASE STYLES
+   =================================================== */
+   html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    min-height: 100%;
   }
-  40% {
-    filter: blur(0px);
-    opacity: 1;
-    height: 80vh; /* Shrink to line height */
-    
+  
+  *, *::before, *::after {
+    box-sizing: border-box;
+    color: inherit;
   }
-  80% {
-    filter: blur(0px);
-    opacity: 1;
-  font-size: clamp(40px, 10vw, 200px);
-    height: 80vh; /* Shrink to line height */
-
+  
+  /* ===================================================
+     2. CSS VARIABLES
+     =================================================== */
+  :root {
+    --size-base: 4px;
+    --font-family: "HelveticaNeue-light", "Helvetica Neue Light",
+        "Helvetica Neue", Helvetica, "inter", Arial, "Lucida Grande", sans-serif;
+  
+    --space-s: calc(var(--size-base));
+    --space-m: calc(var(--size-base) * 2);
+    --space-l: calc(var(--size-base) * 3);
+    --space-xl: calc(var(--size-base) * 4);
+    --space-xxl: calc(var(--size-base) * 6);
+  
+    --radius-s: calc(var(--size-base));
+    --radius-m: calc(var(--size-base) * 2);
+    --radius-l: calc(var(--size-base) * 4);
+    --radius-xl: calc(var(--size-base) * 6);
+  
+    --transition-linear: all 0.2s linear;
+    --transition-move: all 0.3s ease-out;
   }
-  100% {
-    filter: blur(4px);
-    opacity: 1;
-    height: 100px; /* Shrink to line height */
-    font-size: 40px;
+  
+  html,
+  [data-theme="light"] {
+    --color-primary: #0066F4;
+    --color-hover-base: rgba(23, 77, 100, 1);
+    --color-secondary: #EF89FD;
+    --color-primary-background: #ffffff;
+    --color-content-background: color-mix(in srgb, var(--color-hover-base) 5%, transparent);
+    --color-hover: color-mix(in srgb, var(--color-hover-base) 5%, transparent);
+    --color-primary-foreground: rgba(0, 0, 0, 0.9);
+    --color-primary-negative: rgba(255, 255, 255, 0.9);
+    --color-secondary-foreground: rgba(0, 0, 0, 0.6);
+    --color-tertiary-foreground: rgba(0, 0, 0, 0.4);
+    --color-border-primary: rgba(0, 0, 0, 0.1);
+    --color-border-secondary: rgba(0, 0, 0, 0.15);
   }
-}
-.main-title {
-  font-family: var(--font-family);
-  font-size: clamp(40px, 10vw, 200px);
-  line-height: 0.95;
-  display: flex;
-  align-content: center;
-  align-items: center;
-  justify-content: center;
-  padding: 100px 0 0px;
-  height: 80vh; /* Initial height */
-  animation: mainTitleAnimation 3.5s cubic-bezier(1,0,0,1) forwards; /* Animation */
-}
-
-/* Main container for the image gallery */
-#image-gallery {
+  
+  /* ===================================================
+     3. GLOBAL TYPOGRAPHY
+     =================================================== */
+  body {
+    -webkit-font-smoothing: antialiased;
+    font-family: var(--font-family);
+  }
+  
+  .text-m {
+    font-size: 16px;
+    line-height: 24px;
+  }
+  
+  /* ===================================================
+     4. IMAGE GALLERY STYLES
+     =================================================== */
+  #image-gallery {
     width: 90%;
     margin: 104px auto; /* Center the gallery with auto margins */
-}
-
-/* Flexbox layout for rows within the image gallery */
-#image-gallery .row {
+  }
+  
+  #image-gallery .row {
     display: flex;
     justify-content: space-between;
     margin-bottom: 16px;
-}
-
-
-
-.text-search-container {
-  position: fixed;
+  }
+  
+  #image-gallery .row div {
+    border-radius: var(--radius-m);
+    background-position: center center;
+    transform: translate(0, 0) rotate(0deg);
+    transition: all 0.2s ease-out;
+    box-shadow:
+        0px 0.3px 1.7px -2px rgba(0, 0, 0, 0.028),
+        0px 0.9px 5.6px -2px rgba(0, 0, 0, 0.042),
+        0px 4px 25px -2px rgba(0, 0, 0, 0.07);
+  }
+  
+  #image-gallery .row div:hover {
+    box-shadow:
+        0px 0.3px 6px -2px rgba(0, 0, 0, 0.028),
+        0px 0.9px 12px -2px rgba(0, 0, 0, 0.042),
+        0px 4px 48px -2px rgba(0, 0, 0, 0.07);
+  }
+  
+  #image-gallery .row div.hover-int-1:hover {
+    transform: translate(-4px, 8px) rotate(1deg);
+  }
+  #image-gallery .row div.hover-int-2:hover {
+    transform: translate(4px, -8px) rotate(1deg);
+  }
+  #image-gallery .row div.hover-int-3:hover {
+    transform: translate(4px, 8px) rotate(1deg);
+  }
+  #image-gallery .row div.hover-int-4:hover {
+    transform: translate(-4px, -8px) rotate(1deg);
+  }
+  
+  /* ===================================================
+     5. MAIN TITLE & ANIMATION
+     =================================================== */
+  @keyframes mainTitleAnimation {
+    0% {
+      filter: blur(100px);
+      font-size: clamp(40px, 10vw, 200px);
+      opacity: 0;
+      height: 80vh;
+    }
+    40% {
+      filter: blur(0px);
+      opacity: 1;
+      height: 80vh;
+    }
+    80% {
+      filter: blur(0px);
+      opacity: 1;
+      font-size: clamp(40px, 10vw, 200px);
+      height: 80vh;
+    }
+    100% {
+      filter: blur(4px);
+      opacity: 1;
+      height: 100px;
+      font-size: 40px;
+    }
+  }
+  
+  .main-title {
+    font-family: var(--font-family);
+    font-size: clamp(40px, 10vw, 200px);
+    line-height: 0.95;
+    display: flex;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 0 0;
+    height: 80vh;
+    animation: mainTitleAnimation 3.5s cubic-bezier(1,0,0,1) forwards;
+  }
+  
+  /* ===================================================
+     6. SEARCH & STATUS STYLES
+     =================================================== */
+  .text-search-container {
+    position: fixed;
     top: 24px;
     width: 80%;
     left: 10%;
     z-index: 1;
     display: flex;
-}
-
-.button-clear {
-  height: 40px;
-  width: 40px;
-  background: color-mix(in srgb, var(--color-primary-background) 40%, transparent 60%);
-  color: var(--color-primary-foreground);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: translateX(0px) scale(1);
-  transition: var(--transition-move);
-  border-radius: var(--radius-l);
-  backdrop-filter: blur(20px);
-  box-shadow:
-  0.6px 0.6px 2.3px rgba(0, 0, 0, 0.005),
-  2px 2px 5.5px rgba(0, 0, 0, 0.009),
-  4.5px 4.5px 10.4px rgba(0, 0, 0, 0.012),
-  8.9px 8.9px 18.5px rgba(0, 0, 0, 0.014),
-  18px 18px 34.7px rgba(0, 0, 0, 0.017),
-  64px 64px 83px rgba(0, 0, 0, 0.04);
-}
-.button-clear.button-clear--hidden {
-  transform: translateX(0px) scale(0);
-}
-/* Styles for the search box */
-#search-box {
-  height: 40px;
-  width: 100%;
+  }
+  
+  #search-box {
+    height: 40px;
+    width: 100%;
     outline: none;
     border: none;
     font-size: 16px;
@@ -209,43 +176,66 @@ body {
     backdrop-filter: blur(20px);
     background: var(--color-content-background);  
     box-shadow:
-        0.6px 0.6px 2.3px rgba(0, 0, 0, 0.005),
-        2px 2px 5.5px rgba(0, 0, 0, 0.009),
-        4.5px 4.5px 10.4px rgba(0, 0, 0, 0.012),
-        8.9px 8.9px 18.5px rgba(0, 0, 0, 0.014),
-        18px 18px 34.7px rgba(0, 0, 0, 0.017),
-        64px 64px 83px rgba(0, 0, 0, 0.04);
+      0.6px 0.6px 2.3px rgba(0, 0, 0, 0.005),
+      2px 2px 5.5px rgba(0, 0, 0, 0.009),
+      4.5px 4.5px 10.4px rgba(0, 0, 0, 0.012),
+      8.9px 8.9px 18.5px rgba(0, 0, 0, 0.014),
+      18px 18px 34.7px rgba(0, 0, 0, 0.017),
+      64px 64px 83px rgba(0, 0, 0, 0.04);
     transform: scale(1);
     transition: var(--transition-move);
-
-}
-
-/* Search box focus effect */
-#search-box:focus {
+  }
+  
+  #search-box:focus {
     transform: scale(1.01);
     background: color-mix(in srgb, var(--color-primary-background) 40%, transparent 60%);
     box-shadow:
-        1.8px 1.8px 2.2px rgba(0, 0, 0, 0.02),
-        4.3px 4.3px 5.3px rgba(0, 0, 0, 0.028),
-        8px 8px 10px rgba(0, 0, 0, 0.035),
-        14.3px 14.3px 17.9px rgba(0, 0, 0, 0.042),
-        26.7px 26.7px 33.4px rgba(0, 0, 0, 0.05),
-        64px 64px 80px rgba(0, 0, 0, 0.07);
-}
-
-#search-box:focus + .button-clear {
-  transform: translateX(-34px) scale(0.85);
-  border-radius: var(--radius-m);
-}
-
-#search-box:focus + .button-clear.button-clear--hidden {
-  transform: translateX(-34px) scale(0);
-  border-radius: var(--radius-m);
-}
-
-
-/* Status messages for fetching and end of results */
-#fetching-status, #end-of-results-status {
+      1.8px 1.8px 2.2px rgba(0, 0, 0, 0.02),
+      4.3px 4.3px 5.3px rgba(0, 0, 0, 0.028),
+      8px 8px 10px rgba(0, 0, 0, 0.035),
+      14.3px 14.3px 17.9px rgba(0, 0, 0, 0.042),
+      26.7px 26.7px 33.4px rgba(0, 0, 0, 0.05),
+      64px 64px 80px rgba(0, 0, 0, 0.07);
+  }
+  
+  .button-clear {
+    height: 40px;
+    width: 40px;
+    background: color-mix(in srgb, var(--color-primary-background) 40%, transparent 60%);
+    color: var(--color-primary-foreground);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: translateX(0px) scale(1);
+    transition: var(--transition-move);
+    border-radius: var(--radius-l);
+    backdrop-filter: blur(20px);
+    box-shadow:
+      0.6px 0.6px 2.3px rgba(0, 0, 0, 0.005),
+      2px 2px 5.5px rgba(0, 0, 0, 0.009),
+      4.5px 4.5px 10.4px rgba(0, 0, 0, 0.012),
+      8.9px 8.9px 18.5px rgba(0, 0, 0, 0.014),
+      18px 18px 34.7px rgba(0, 0, 0, 0.017),
+      64px 64px 83px rgba(0, 0, 0, 0.04);
+  }
+  
+  .button-clear.button-clear--hidden {
+    transform: translateX(0px) scale(0);
+  }
+  
+  #search-box:focus + .button-clear {
+    transform: translateX(-34px) scale(0.85);
+    border-radius: var(--radius-m);
+  }
+  
+  #search-box:focus + .button-clear.button-clear--hidden {
+    transform: translateX(-34px) scale(0);
+    border-radius: var(--radius-m);
+  }
+  
+  /* Status messages for fetching and end of results */
+  #fetching-status,
+  #end-of-results-status {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -255,39 +245,39 @@ body {
     padding: 10px 0;
     font-size: 16px;
     display: none;
-}
-
-/* Fetching status animation */
-#fetching-status {
-  /* background: color-mix(in srgb, var(--color-primary-background) 40%, transparent 60%); */
-  background: var(--color-hover-base);
-  filter: blur(24px);
-  mix-blend-mode: color-burn;
-    opacity: 0; /* Start invisible for the animation */
+  }
+  
+  #fetching-status {
+    background: var(--color-hover-base);
+    filter: blur(24px);
+    mix-blend-mode: color-burn;
+    opacity: 0;
     animation: blinkAnimation 1s linear;
     height: 30vh;
     transform: translateY(15vh) scale(1.2);
-}
-
-
-/* Keyframes for blinking animation */
-@keyframes blinkAnimation {
-    0%, 100% { opacity: 0; }
-    50% { opacity: 1; }
-}
-
-/* End of results status */
-#end-of-results-status {
-  background: var(--color-hover-base);
-  filter: blur(24px);
-  mix-blend-mode: color-burn;
-    animation: blinkAnimation 1s linear ;
+  }
+  
+  #end-of-results-status {
+    background: var(--color-hover-base);
+    filter: blur(24px);
+    mix-blend-mode: color-burn;
+    animation: blinkAnimation 1s linear;
     height: 30vh;
     transform: translateY(15vh) scale(1.2);
-}
-
-/* Modal styles */
-.modal {
+  }
+  
+  /* ===================================================
+     7. ANIMATIONS
+     =================================================== */
+  @keyframes blinkAnimation {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+  
+  /* ===================================================
+     8. MODAL STYLES
+     =================================================== */
+  .modal {
     display: none; /* Hidden by default */
     position: fixed;
     z-index: 2;
@@ -295,11 +285,10 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.8);
-}
-
-/* Modal content layout */
-.modal-content {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  .modal-content {
     position: relative;
     width: 80%;
     height: 80%;
@@ -312,10 +301,9 @@ body {
     padding: 0;
     border-radius: var(--radius-l);
     overflow: hidden;
-}
-
-/* Right panel within the modal */
-.right-panel {
+  }
+  
+  .right-panel {
     z-index: 2;
     backdrop-filter: blur(20px);
     width: 30%;
@@ -325,52 +313,44 @@ body {
     overflow-y: scroll;
     gap: var(--space-l);
     padding: var(--space-xxl);
-    /* border-radius: var(--radius-m); */
     background: var(--color-content-background);
     justify-content: flex-start;
-
-
-}
-
-/* Modal image styling */
-#modal-image {
+  }
+  
+  #modal-image {
     width: 70%;
     height: auto;
-}
-
-/* Tag container within the modal */
-#modal-tags {
+  }
+  
+  #modal-tags {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-}
-
-/* Individual tag styling */
-#modal-tags .tag {
-  background-color: var(--color-content-background);
-  margin: var(--space-s) var(--space-s);
-  padding: var(--space-s) var(--space-m);
-  border-radius: var(--radius-m);
-  cursor: pointer;
-  transition: var(--transition-linear);
-  text-align: center;
-  max-width: 200px; /* Set maximum width */
-  white-space: nowrap; /* Prevent text from wrapping */
-  overflow: hidden; /* Hide overflow */
-  text-overflow: ellipsis;
-}
-
-/* Hover effect for tags */
-#modal-tags .tag:hover {
-  background-color: color-mix(in srgb, var(--color-hover-base) 15%, transparent);
-}
-
-/* Close button for the modal */
-.close {
+  }
+  
+  #modal-tags .tag {
+    background-color: var(--color-content-background);
+    margin: var(--space-s) var(--space-s);
+    padding: var(--space-s) var(--space-m);
+    border-radius: var(--radius-m);
+    cursor: pointer;
+    transition: var(--transition-linear);
+    text-align: center;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  #modal-tags .tag:hover {
+    background-color: color-mix(in srgb, var(--color-hover-base) 15%, transparent);
+  }
+  
+  .close {
     position: absolute;
     z-index: 3;
     top: 10px;
     right: 20px;
     font-size: 28px;
     cursor: pointer;
-}
+  }
