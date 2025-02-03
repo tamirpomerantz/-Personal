@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>じ Personal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="rene.css">
+
+</head>
+<body>
+    <div class="text-search-container">
+        <input type="text" id="search-box" placeholder="Search images..." onkeypress="searchImages(event)">
+        <div class="button-clear button-clear--hidden"><i data-feather="x"></i></div>
+    </div>
+
+    <div class="main-title">じ Personal</div>
+    <div id="image-gallery"></div>
+    <div id="fetching-status"></div>
+    <div id="end-of-results-status"></div>
+    
+    <!-- Add this modal structure -->
+    <div id="image-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">
+                <i data-feather="x"></i>
+            </span>
+            <div id="modal-image" src="" alt="Modal Image"></div>
+            <div class="right-panel">
+                <div id="modal-tags"></div>
+                <div id="modal-description" class="text-m"></div>
+            </div>
+          
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/panzoom@9.4.3/dist/panzoom.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script>
+      feather.replace({
+   stroke: 'currentColor',
+   'stroke-width': 1,
+   'stroke-linecap': 'round',
+   'stroke-linejoin': 'round',
+  });
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
