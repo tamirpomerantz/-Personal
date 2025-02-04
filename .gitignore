@@ -1,5 +1,6 @@
-# Node.js libraries
-/node_modules/
-.env
 package-lock.json
 images.json
+*.log
+/node_modules/
+.env
+
