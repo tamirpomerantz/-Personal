@@ -201,46 +201,63 @@ document.addEventListener('DOMContentLoaded', function() {
         // Decode the image name from the URL
         const imageName = decodeURIComponent(imageUrl).split('/').pop();
     
-        // Fetch image details (description and tags)
-        fetch(`/image-info?imageName=${encodeURIComponent(imageName)}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Image not found');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Set modal description and tags
-                modalDescription.textContent = data.context || 'No description available';
-                modalTags.innerHTML = ''; // Clear previous tags
-    
-                if (data.tags && Array.isArray(data.tags)) {
-                    data.tags.forEach(tag => {
-                        const tagElement = document.createElement('span');
-                        tagElement.textContent = tag;
-                        tagElement.classList.add('tag');
-                        // Allow clicking a tag to search for that tag
-                        tagElement.addEventListener('click', () => {
-                            modal.style.display = 'none'; // Close the modal
-                            searchBox.value = tag;         // Populate search box with the tag
-                            loadImages(tag, false);        // Trigger a new search with the tag
-                        });
-                        modalTags.appendChild(tagElement);
-                    });
-                } else {
-                    modalTags.textContent = 'No tags available';
-                }
-    
-                // Display the modal
-                modal.style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Error fetching image info:', error);
-                modalDescription.textContent = 'Error fetching image information.';
-                modalTags.innerHTML = ''; // Clear previous tags
+       
+    fetch(`/image-info?imageName=${encodeURIComponent(imageName)}`)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Image not found');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Set modal description and tags
+        modalDescription.textContent = data.context || 'No description available';
+        modalTags.innerHTML = ''; // Clear previous tags
+
+        if (data.tags && Array.isArray(data.tags)) {
+            data.tags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                const textSpan = document.createElement('span');
+                textSpan.textContent = tag;
+                textSpan.classList.add('tag-text');
+
+                tagElement.appendChild(textSpan);
+                tagElement.classList.add('tag');
+
+ // Create a remove div for each tag
+ const removeDiv = document.createElement('div');
+ removeDiv.innerHTML = feather.icons['x'].toSvg({ width: 16, height: 16 });
+ removeDiv.classList.add('remove-tag-div');
+ removeDiv.addEventListener('click', (event) => {
+     event.stopPropagation(); // Prevent triggering the tag click event
+     removeTag(imageName, tag, tagElement); // Call the remove function
+ });
+
+ // Append the remove div to the tag element
+ tagElement.appendChild(removeDiv);
+                // Allow clicking a tag to search for that tag
+                tagElement.addEventListener('click', () => {
+                    modal.style.display = 'none'; // Close the modal
+                    searchBox.value = tag;         // Populate search box with the tag
+                    loadImages(tag, false);        // Trigger a new search with the tag
+                });
+
+                modalTags.appendChild(tagElement);
             });
-    }
-    
+        } else {
+            modalTags.textContent = 'No tags available';
+        }
+
+        // Display the modal
+        modal.style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error fetching image info:', error);
+        modalDescription.textContent = 'Error fetching image information.';
+        modalTags.innerHTML = ''; // Clear previous tags
+    });
+}
+
     // Close modal when the close ("X") button is clicked
     closeModal.addEventListener('click', () => {
         modal.style.display = 'none';
@@ -252,7 +269,26 @@ document.addEventListener('DOMContentLoaded', function() {
             modal.style.display = 'none';
         }
     });
-
+// Function to remove a tag using the API
+function removeTag(imageName, tag, tagElement) {
+    fetch(`/api/images/${encodeURIComponent(imageName)}/tags/${encodeURIComponent(tag)}`, {
+        method: 'DELETE'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to remove tag');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data.message);
+        // Remove the tag element from the DOM
+        tagElement.remove();
+    })
+    .catch(error => {
+        console.error('Error removing tag:', error);
+    });
+}
     /* ===================================================
        5. WINDOW EVENTS: RESIZE & SCROLL
        =================================================== */

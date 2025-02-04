@@ -336,22 +336,60 @@
   }
   
   #modal-tags .tag {
-    background-color: var(--color-content-background);
+    background: color-mix(in srgb, var(--color-hover-base) 15%, white 85%);
     margin: var(--space-s) var(--space-s);
     padding: var(--space-s) var(--space-m);
     border-radius: var(--radius-m);
     cursor: pointer;
     transition: var(--transition-linear);
+    display: flex;
+    gap: 4px;
+    align-content: center;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #modal-tags .tag .tag-text {
     text-align: center;
-    max-width: 200px;
+    max-width: 180px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   
-  #modal-tags .tag:hover {
-    background-color: color-mix(in srgb, var(--color-hover-base) 15%, transparent);
+  
+  #modal-tags .tag .remove-tag-div {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top:0px;
+    background: color-mix(in srgb, var(--color-hover-base) 30%, white 70%);
+    color: var(--color-primary-foreground);
+    height: 100%;
+    right: 0px;
+    transform: translateX(16px);
+    transition: var(--transition-move);
+    border-radius: var(--radius-m);
   }
+  #modal-tags .tag:hover .remove-tag-div {
+    width: 24px;
+    transform: translateX(0);
+  }
+
+
+  #modal-tags .tag .remove-tag-div:hover {
+    background: color-mix(in srgb, var(--color-hover-base) 40%, white 60%);
+  }
+
+
+  #modal-tags .tag:hover {
+    background: color-mix(in srgb, var(--color-hover-base) 20%, white 80%);
+  }
+
+
   
   .close {
     position: absolute;

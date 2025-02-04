@@ -434,6 +434,85 @@ app.get('/image-info', (req, res) => {
     }
 });
 
+
+
+// Function to remove a tag from a specific image
+const removeTagFromImage = async (imageName, tagToRemove) => {
+  if (imageData[imageName] && Array.isArray(imageData[imageName].tags.tags)) {
+    imageData[imageName].tags.tags = imageData[imageName].tags.tags.filter(tag => tag !== tagToRemove);
+    await fs.writeJson(jsonFilePath, imageData, { spaces: 2 });
+    console.log(`Removed tag "${tagToRemove}" from image "${imageName}".`);
+  } else {
+    console.warn(`Image "${imageName}" not found or has no tags.`);
+  }
+};
+
+// Function to add a tag to a specific image
+const addTagToImage = async (imageName, tagToAdd) => {
+  if (imageData[imageName]) {
+    if (!Array.isArray(imageData[imageName].tags.tags)) {
+      imageData[imageName].tags.tags = [];
+    }
+    if (!imageData[imageName].tags.tags.includes(tagToAdd)) {
+      imageData[imageName].tags.tags.push(tagToAdd);
+      await fs.writeJson(jsonFilePath, imageData, { spaces: 2 });
+      console.log(`Added tag "${tagToAdd}" to image "${imageName}".`);
+    } else {
+      console.log(`Tag "${tagToAdd}" already exists for image "${imageName}".`);
+    }
+  } else {
+    console.warn(`Image "${imageName}" not found.`);
+  }
+};
+
+// Function to update the description of a specific image
+const updateImageDescription = async (imageName, newDescription) => {
+  if (imageData[imageName]) {
+    imageData[imageName].text = newDescription;
+    await fs.writeJson(jsonFilePath, imageData, { spaces: 2 });
+    console.log(`Updated description for image "${imageName}".`);
+  } else {
+    console.warn(`Image "${imageName}" not found.`);
+  }
+};
+
+
+// API endpoint to remove a tag from a specific image
+app.delete('/api/images/:imageName/tags/:tag', async (req, res) => {
+  const { imageName, tag } = req.params;
+  try {
+    await removeTagFromImage(imageName, tag);
+    res.status(200).json({ message: `Tag "${tag}" removed from image "${imageName}".` });
+  } catch (error) {
+    res.status(500).json({ error: `Failed to remove tag: ${error.message}` });
+  }
+});
+
+// API endpoint to add a tag to a specific image
+app.post('/api/images/:imageName/tags', async (req, res) => {
+  const { imageName } = req.params;
+  const { tag } = req.body;
+  try {
+    await addTagToImage(imageName, tag);
+    res.status(200).json({ message: `Tag "${tag}" added to image "${imageName}".` });
+  } catch (error) {
+    res.status(500).json({ error: `Failed to add tag: ${error.message}` });
+  }
+});
+
+// API endpoint to update the description of a specific image
+app.put('/api/images/:imageName/description', async (req, res) => {
+  const { imageName } = req.params;
+  const { description } = req.body;
+  try {
+    await updateImageDescription(imageName, description);
+    res.status(200).json({ message: `Description updated for image "${imageName}".` });
+  } catch (error) {
+    res.status(500).json({ error: `Failed to update description: ${error.message}` });
+  }
+});
+
+
 // =====================================================
 // 🔟 START THE SERVER
 // =====================================================
