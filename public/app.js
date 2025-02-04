@@ -1,3 +1,7 @@
+// to fix:
+// scrolling when in modal activates the lightbox
+
+
 document.addEventListener('DOMContentLoaded', function() {
     /* ===================================================
        1. VARIABLE & ELEMENT INITIALIZATION

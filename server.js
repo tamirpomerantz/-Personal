@@ -10,7 +10,11 @@ const fs = require('fs-extra');
 const axios = require('axios');
 require('dotenv').config(); // Add this line at the top of your file
 const { createWorker } = require('tesseract.js');
+
+// Images Directory:
 const photosDir = path.join(__dirname, '../', '');
+
+// Images JSON:
 const jsonFilePath = path.join(__dirname, '/', 'images.json');
 const apiKey = process.env.OPENAI_API_KEY; // Use the environment variable
 
@@ -214,17 +218,17 @@ const updateJSONFile = async () => {
   try {
     let imageData = {};
 
+    // Check if the JSON file exists, if not, create an empty file
     if (await fs.pathExists(jsonFilePath)) {
       imageData = await fs.readJson(jsonFilePath);
+    } else {
+      await fs.writeJson(jsonFilePath, imageData, { spaces: 2 });
     }
 
-    // console.log(imageData);
     const photoFiles = await fs.readdir(photosDir);
-    // console.log(photoFiles);
 
     for (const photo of photoFiles) {
-     
-        if (!imageData[photo] && /\.(jpg|jpeg|png|gif|webp)$/i.test(photo)) {
+      if (!imageData[photo] && /\.(jpg|jpeg|png|gif|webp)$/i.test(photo)) {
         const photoPath = path.join(photosDir, photo);
         const resizedPhotoPath = await resizeImage(photoPath);
         const text = await performOCR(resizedPhotoPath);
@@ -274,7 +278,8 @@ const getImageDimensions = async (path) => {
 
 const getImagesData = () => {
     // Read and parse the images.json file
-    const data = fs.readFileSync('./images.json', 'utf-8');
+    const data = fs.readFileSync(jsonFilePath, 'utf-8');
+
     const jsonData = JSON.parse(data);
     // Convert the object into an array of entries, reverse it, and then reconstruct as an object
     const reversedData = Object.keys(jsonData)
