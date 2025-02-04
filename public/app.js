@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize Panzoom on the modal image for zooming and panning
         const panzoomInstance = panzoom(modalImage, {
             maxScale: 5,       // Maximum zoom level
-            contain: 'outside' // Allow panning outside the bounds
+            contain: 'inside'  // Prevent panning outside the bounds
         });
     
         // Add zooming with the mouse wheel

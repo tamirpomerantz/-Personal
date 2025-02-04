@@ -320,11 +320,15 @@
     justify-content: flex-start;
   }
   
-  #modal-image {
+  #modal-image-container {
     width: 70%;
     height: auto;
   }
   
+  #modal-image {
+    width: 100%;
+    height: 100%;
+  }
   #modal-tags {
     display: flex;
     flex-direction: row;
