@@ -260,6 +260,8 @@ const imagesDir = path.join(__dirname, '..', '');
 // Serve static files from the images directory when the URL starts with /photos
 app.use('/photos', express.static(imagesDir));
 
+app.use(express.json());
+
 // Serve static files from the 'public' directory
 app.use(express.static('public'));
 
@@ -468,7 +470,7 @@ const addTagToImage = async (imageName, tagToAdd) => {
 // Function to update the description of a specific image
 const updateImageDescription = async (imageName, newDescription) => {
   if (imageData[imageName]) {
-    imageData[imageName].text = newDescription;
+    imageData[imageName].tags.context = newDescription;
     await fs.writeJson(jsonFilePath, imageData, { spaces: 2 });
     console.log(`Updated description for image "${imageName}".`);
   } else {

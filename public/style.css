@@ -337,7 +337,7 @@
   
   #modal-tags .tag {
     background: color-mix(in srgb, var(--color-hover-base) 15%, white 85%);
-    margin: var(--space-s) var(--space-s);
+    margin: var(--space-m) var(--space-m) 0 0;
     padding: var(--space-s) var(--space-m);
     border-radius: var(--radius-m);
     cursor: pointer;
@@ -388,8 +388,68 @@
   #modal-tags .tag:hover {
     background: color-mix(in srgb, var(--color-hover-base) 20%, white 80%);
   }
+  #modal-description {
+    padding:var(--space-m);
+    background: transparent;
+    transition: var(--transition-linear);
+    outline: 0px solid transparent;
+    border-radius: var(--radius-m);
+    position: relative;
+  }
+  #modal-description::after {
+    opacity: 0; /* Hidden when not focused */
+    transition: var(--transition-linear)
+  }
+  #modal-description:hover {
+    background: color-mix(in srgb, var(--color-hover-base) 10%, white 90%);
+  }
 
+  #modal-description:focus {
+    background: var(--color-hover);
+    }
 
+    #modal-description:focus::after {
+      content: "↳ Enter to change";
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      padding: 4px 8px;
+      line-height: 8px;
+      background: var(--color-hover);
+      border: 1px solid var(--color-border-primary);
+      border-radius: var(--radius-s);
+      font-size: 12px;
+      color: var(--color-primary-foreground);
+      opacity: .7; /* Fully visible when focused */
+    transition: var(--transition-linear)
+    }
+
+    #modal-description.updating {
+    background: color-mix(in srgb, var(--color-hover-base) 30%, white 70%);
+      transform: scale(0.95);
+      color: color-mix(in srgb, var(--color-primary-foreground) 80%, transparent);
+      border-radius: var(--radius-m);
+      animation: borderGradientAnimation 1s linear infinite;
+    }
+  
+    @keyframes borderGradientAnimation {
+      0% {
+        opacity: 1;
+      filter: blur(0px);
+      }
+      25% {
+        opacity: .5;
+      filter: blur(5px);
+      }
+      80% {
+      opacity: .8;
+      filter: blur(5px);
+      }
+      100% {
+        opacity: 1;
+      filter: blur(0px);
+      }
+    }
   
   .close {
     position: absolute;

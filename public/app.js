@@ -1,5 +1,5 @@
 // to fix:
-// scrolling when in modal activates the lightbox
+// editing descriptoin
 
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -20,6 +20,53 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalImage = document.getElementById('modal-image');
     const modalTags = document.getElementById('modal-tags');
     const modalDescription = document.getElementById('modal-description');
+
+    modalDescription.setAttribute('contenteditable', 'true');
+    // modalDescription.addEventListener('blur', function() {
+    //     updateDescription();
+    //     modalDescription.classList.add('updating'); // Add .updating class
+    //     setTimeout(() => {
+    //         modalDescription.classList.remove('updating'); // Remove .updating class after 1 second
+    //     }, 1000);
+    // });
+    modalDescription.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Prevent default Enter behavior (new line)
+            updateDescription();
+            modalDescription.classList.add('updating'); // Add .updating class
+            setTimeout(() => {
+                modalDescription.classList.remove('updating'); // Remove .updating class after 1 second
+            }, 1000);
+        }
+    });
+// Function to update the description using the backend API
+function updateDescription() {
+    const newDescription = modalDescription.textContent.trim();
+    const imageName = decodeURIComponent(modalImage.style.backgroundImage.slice(5, -2)).split('/').pop();
+
+    fetch(`/api/images/${encodeURIComponent(imageName)}/description`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ description: newDescription })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to update description');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data.message);
+    })
+    .catch(error => {
+        console.error('Error updating description:', error);
+    });
+    modalDescription.blur(); // Remove focus from the element
+
+}
+
     const closeModal = document.querySelector('.modal .close');
     const gap = 16; // Gap in pixels between images
 
@@ -212,6 +259,8 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
         // Set modal description and tags
         modalDescription.textContent = data.context || 'No description available';
+
+
         modalTags.innerHTML = ''; // Clear previous tags
 
         if (data.tags && Array.isArray(data.tags)) {
@@ -224,17 +273,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 tagElement.appendChild(textSpan);
                 tagElement.classList.add('tag');
 
- // Create a remove div for each tag
- const removeDiv = document.createElement('div');
- removeDiv.innerHTML = feather.icons['x'].toSvg({ width: 16, height: 16 });
- removeDiv.classList.add('remove-tag-div');
- removeDiv.addEventListener('click', (event) => {
-     event.stopPropagation(); // Prevent triggering the tag click event
-     removeTag(imageName, tag, tagElement); // Call the remove function
- });
+                // Create a remove div for each tag
+                const removeDiv = document.createElement('div');
+                removeDiv.innerHTML = feather.icons['x'].toSvg({ width: 16, height: 16 });
+                removeDiv.classList.add('remove-tag-div');
+                removeDiv.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent triggering the tag click event
+                    removeTag(imageName, tag, tagElement); // Call the remove function
+                });
 
- // Append the remove div to the tag element
- tagElement.appendChild(removeDiv);
+                // Append the remove div to the tag element
+                tagElement.appendChild(removeDiv);
                 // Allow clicking a tag to search for that tag
                 tagElement.addEventListener('click', () => {
                     modal.style.display = 'none'; // Close the modal
