@@ -1,5 +1,5 @@
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     /* ===================================================
        1. VARIABLE & ELEMENT INITIALIZATION
        =================================================== */
@@ -18,17 +18,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalImage = document.getElementById('modal-image');
     const modalTags = document.getElementById('modal-tags');
     const modalDescription = document.getElementById('modal-description');
-    const ImageBGpalette = [  "#E1F2D9","#E4E6FE","#EEEEEE","#FED4E9","#FEE2BA","#FFECBA"];
+    const addTagButton = document.getElementById('addtagbutton');
+    const ImageBGpalette = ["#E1F2D9", "#E4E6FE", "#EEEEEE", "#FED4E9", "#FEE2BA", "#FFECBA"];
+    const ADD_TAG_BUTTON_UI = "Add tag";
 
     modalDescription.setAttribute('contenteditable', 'true');
-    // modalDescription.addEventListener('blur', function() {
-    //     updateDescription();
-    //     modalDescription.classList.add('updating'); // Add .updating class
-    //     setTimeout(() => {
-    //         modalDescription.classList.remove('updating'); // Remove .updating class after 1 second
-    //     }, 1000);
-    // });
-    modalDescription.addEventListener('keydown', function(event) {
+    modalDescription.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault(); // Prevent default Enter behavior (new line)
             updateDescription();
@@ -38,33 +33,119 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 1000);
         }
     });
-// Function to update the description using the backend API
-function updateDescription() {
-    const newDescription = modalDescription.textContent.trim();
+    
+
+// Function to add a new tag using the backend API
+function addTag() {
+    const newTag = addTagButton.textContent.trim();
     const imageName = decodeURIComponent(modalImage.style.backgroundImage.slice(5, -2)).split('/').pop();
 
-    fetch(`/api/images/${encodeURIComponent(imageName)}/description`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ description: newDescription })
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to update description');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log(data.message);
-    })
-    .catch(error => {
-        console.error('Error updating description:', error);
-    });
-    modalDescription.blur(); // Remove focus from the element
+    if (newTag) {
+        fetch(`/api/images/${encodeURIComponent(imageName)}/tags`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ tag: newTag })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to add tag');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data.message);
+                // Add the new tag to the modal
+                const tagElement = document.createElement('span');
+                const textSpan = document.createElement('span');
+                textSpan.textContent = newTag;
+                textSpan.classList.add('tag-text');
 
+                tagElement.appendChild(textSpan);
+                tagElement.classList.add('tag');
+
+                // Create a remove div for the new tag
+                const removeDiv = document.createElement('div');
+                removeDiv.innerHTML = feather.icons['x'].toSvg({ width: 16, height: 16 });
+                removeDiv.classList.add('remove-tag-div');
+                removeDiv.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent triggering the tag click event
+                    removeTag(imageName, newTag, tagElement); // Call the remove function
+                });
+
+                // Append the remove div to the tag element
+                tagElement.appendChild(removeDiv);
+                // Allow clicking a tag to search for that tag
+                tagElement.addEventListener('click', () => {
+                    modal.style.display = 'none'; // Close the modal
+                    searchBox.value = newTag;     // Populate search box with the tag
+                    currentPage = 1;
+                    loadImages(newTag, false);    // Trigger a new search with the tag
+                });
+
+                modalTags.insertBefore(tagElement, addTagButton);
+                addTagButton.textContent = ''; // Clear the add tag button content
+            })
+            .catch(error => {
+                console.error('Error adding tag:', error);
+            });
+    }
 }
+
+// Make the add tag button contenteditable
+addTagButton.textContent = ADD_TAG_BUTTON_UI; // Reset the button text after a brief delay
+addTagButton.setAttribute('contenteditable', 'true');
+addTagButton.addEventListener('focus', function () {
+    if (addTagButton.textContent === ADD_TAG_BUTTON_UI) {
+        addTagButton.textContent = ''; // Clear the text on first focus
+    }
+    // Move the cursor to the end of the content
+    const range = document.createRange();
+    const selection = window.getSelection();
+    range.selectNodeContents(addTagButton);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+});
+addTagButton.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault(); // Prevent default Enter behavior (new line)
+        addTag();
+    }
+});
+addTagButton.addEventListener('blur', function () {
+    setTimeout(() => {
+        addTagButton.textContent = ADD_TAG_BUTTON_UI; // Reset the button text after a brief delay
+    }, 200); // Adjust the delay as needed
+});
+    // Function to update the description using the backend API
+    function updateDescription() {
+        const newDescription = modalDescription.textContent.trim();
+        const imageName = decodeURIComponent(modalImage.style.backgroundImage.slice(5, -2)).split('/').pop();
+
+        fetch(`/api/images/${encodeURIComponent(imageName)}/description`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ description: newDescription })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update description');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data.message);
+            })
+            .catch(error => {
+                console.error('Error updating description:', error);
+            });
+        modalDescription.blur(); // Remove focus from the element
+
+    }
 
     const closeModal = document.querySelector('.modal .close');
     const gap = 16; // Gap in pixels between images
@@ -77,7 +158,7 @@ function updateDescription() {
        2. SEARCH BOX & CLEAR BUTTON EVENTS
        =================================================== */
     // Show or hide the clear button based on input value
-    searchBox.addEventListener('input', function() {
+    searchBox.addEventListener('input', function () {
         if (searchBox.value.trim() !== '') {
             clearButton.classList.remove('button-clear--hidden');
         } else {
@@ -86,30 +167,31 @@ function updateDescription() {
     });
 
     // Clear the search box when the clear button is clicked
-    clearButton.addEventListener('click', function() {
+    clearButton.addEventListener('click', function () {
         searchBox.value = '';
         clearButton.classList.add('button-clear--hidden');
+        currentPage = 1;
         loadImages("", false);
         // searchBox.focus(); // Optionally focus the input field after clearing
     });
 
     let FetchIsRandom = false;
 
-        // Add event listener for the random toggle button
-        const randomToggleButton = document.getElementById('random-toggle');
-        randomToggleButton.addEventListener('click', function() {
-            FetchIsRandom = !FetchIsRandom; // Toggle the random state
-    
-            // Update the icon based on the current state
-            if (FetchIsRandom) {
-                randomToggleButton.classList.add('active-toggle');
-            } else {
-                randomToggleButton.classList.remove('active-toggle');
-            }
-            // Optionally, reload images with the new random state
-            currentPage = 1;
-            loadImages(searchBox.value.trim(), false, FetchIsRandom);
-        });
+    // Add event listener for the random toggle button
+    const randomToggleButton = document.getElementById('random-toggle');
+    randomToggleButton.addEventListener('click', function () {
+        FetchIsRandom = !FetchIsRandom; // Toggle the random state
+
+        // Update the icon based on the current state
+        if (FetchIsRandom) {
+            randomToggleButton.classList.add('active-toggle');
+        } else {
+            randomToggleButton.classList.remove('active-toggle');
+        }
+        // Optionally, reload images with the new random state
+        currentPage = 1;
+        loadImages(searchBox.value.trim(), false, FetchIsRandom);
+    });
 
 
     /* ===================================================
@@ -119,16 +201,16 @@ function updateDescription() {
     function loadImages(search, append = false, isRandom = FetchIsRandom) {
         const fetchingStatusDiv = document.getElementById('fetching-status');
         const endOfResultsStatusDiv = document.getElementById('end-of-results-status');
-    
+
         if (isFetching) {
             console.log('isFetching');
             return; // Prevent multiple concurrent fetches
         }
-    
+
         // Show fetching status briefly
         fetchingStatusDiv.style.display = 'block';
         setTimeout(() => { fetchingStatusDiv.style.display = 'none'; }, 1000);
-    
+
         isFetching = true; // Set flag to indicate fetching is underway
         console.log(`firing loadImages page ${currentPage} q=${search} shuffle=${isRandom}`);
         return new Promise((resolve) => {
@@ -163,7 +245,7 @@ function updateDescription() {
                         setTimeout(() => { endOfResultsStatusDiv.style.display = 'none'; }, 1000);
                     }
                     // Reset fetching flag after a brief delay
-                    setTimeout(() => { 
+                    setTimeout(() => {
                         isFetching = false;
                         resolve();
                     }, 1000);
@@ -205,13 +287,13 @@ function updateDescription() {
 
         // Attach click events to the newly added images for opening the modal
         gallery.querySelectorAll('div[style]').forEach(imgDiv => {
-            imgDiv.addEventListener('click', function() {
+            imgDiv.addEventListener('click', function () {
                 const imageUrl = this.style.backgroundImage.slice(5, -2); // Extract the URL from style
                 openImageModal(imageUrl);
             });
         });
     }
-    
+
     // Create and append a row of images with calculated dimensions
     function placeRow(row, totalWidth, gap) {
         const rowElement = document.createElement('div');
@@ -247,124 +329,130 @@ function updateDescription() {
        4. MODAL FUNCTIONALITY
        =================================================== */
     // Open the modal with the selected image and fetch its details
-  
-let currentImageIndex = 0;
-let imagesInView = [];
 
-// Function to open the image modal and set up navigation
-function openImageModal(imageUrl) {
-    // Set modal image styles
-    modalImage.style.backgroundImage = `url("${imageUrl}")`;
-    modalImage.style.backgroundSize = 'contain';
-    modalImage.style.backgroundPosition = 'center';
-    modalImage.style.backgroundRepeat = 'no-repeat';
+    let currentImageIndex = 0;
+    let imagesInView = [];
 
-    // Initialize Panzoom on the modal image for zooming and panning
-    const panzoomInstance = panzoom(modalImage, {
-        maxScale: 5,       // Maximum zoom level
-        contain: 'inside'  // Prevent panning outside the bounds
-    });
+    // Function to open the image modal and set up navigation
 
-    // Add zooming with the mouse wheel
-    modalImage.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+    function openImageModal(imageUrl) {
+        // Set modal image styles
+        modalImage.style.backgroundImage = `url("${imageUrl}")`;
+        modalImage.style.backgroundSize = 'contain';
+        modalImage.style.backgroundPosition = 'center';
+        modalImage.style.backgroundRepeat = 'no-repeat';
 
-    // Decode the image name from the URL
-    const imageName = decodeURIComponent(imageUrl).split('/').pop();
+        // Initialize Panzoom on the modal image for zooming and panning
+        const panzoomInstance = panzoom(modalImage, {
+            maxScale: 5,       // Maximum zoom level
+            contain: 'inside'  // Prevent panning outside the bounds
+        });
 
-    // Fetch image info
-    fetch(`/image-info?imageName=${encodeURIComponent(imageName)}`)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Image not found');
-        }
-        return response.json();
-    })
-    .then(data => {
-        // Set modal description and tags
-        modalDescription.textContent = data.context || 'No description available';
+        // Add zooming with the mouse wheel
+        modalImage.addEventListener('wheel', panzoomInstance.zoomWithWheel);
 
-        modalTags.innerHTML = ''; // Clear previous tags
+        // Decode the image name from the URL
+        const imageName = decodeURIComponent(imageUrl).split('/').pop();
 
-        if (data.tags && Array.isArray(data.tags)) {
-            data.tags.forEach(tag => {
-                const tagElement = document.createElement('span');
-                const textSpan = document.createElement('span');
-                textSpan.textContent = tag;
-                textSpan.classList.add('tag-text');
-
-                tagElement.appendChild(textSpan);
-                tagElement.classList.add('tag');
-
-                // Create a remove div for each tag
-                const removeDiv = document.createElement('div');
-                removeDiv.innerHTML = feather.icons['x'].toSvg({ width: 16, height: 16 });
-                removeDiv.classList.add('remove-tag-div');
-                removeDiv.addEventListener('click', (event) => {
-                    event.stopPropagation(); // Prevent triggering the tag click event
-                    removeTag(imageName, tag, tagElement); // Call the remove function
+        // Fetch image info
+        fetch(`/image-info?imageName=${encodeURIComponent(imageName)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Image not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Set modal description and tags
+                modalDescription.textContent = data.context || 'No description available';
+                Array.from(modalTags.children).forEach(child => {
+                    if (child.id !== 'addtagbutton') {
+                        child.remove();
+                    }
                 });
 
-                // Append the remove div to the tag element
-                tagElement.appendChild(removeDiv);
-                // Allow clicking a tag to search for that tag
-                tagElement.addEventListener('click', () => {
-                    modal.style.display = 'none'; // Close the modal
-                    searchBox.value = tag;         // Populate search box with the tag
-                    loadImages(tag, false);        // Trigger a new search with the tag
-                });
+                if (data.tags && Array.isArray(data.tags)) {
+                    data.tags.forEach(tag => {
+                        const tagElement = document.createElement('span');
+                        const textSpan = document.createElement('span');
+                        textSpan.textContent = tag;
+                        textSpan.classList.add('tag-text');
 
-                modalTags.appendChild(tagElement);
+                        tagElement.appendChild(textSpan);
+                        tagElement.classList.add('tag');
+
+                        // Create a remove div for each tag
+                        const removeDiv = document.createElement('div');
+                        removeDiv.innerHTML = feather.icons['x'].toSvg({ width: 16, height: 16 });
+                        removeDiv.classList.add('remove-tag-div');
+                        removeDiv.addEventListener('click', (event) => {
+                            event.stopPropagation(); // Prevent triggering the tag click event
+                            removeTag(imageName, tag, tagElement); // Call the remove function
+                        });
+
+                        // Append the remove div to the tag element
+                        tagElement.appendChild(removeDiv);
+                        // Allow clicking a tag to search for that tag
+                        tagElement.addEventListener('click', () => {
+                            modal.style.display = 'none'; // Close the modal
+                            searchBox.value = tag;         // Populate search box with the tag
+                            currentPage = 1;
+                            loadImages(tag, false);        // Trigger a new search with the tag
+                        });
+
+                        modalTags.insertBefore(tagElement, modalTags.firstChild);
+                    });
+                } else {
+                    modalTags.textContent = 'No tags available';
+                }
+                // Display the modal
+                modal.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error fetching image info:', error);
+                modalDescription.textContent = 'Error fetching image information.';
+                modalTags.innerHTML = ''; // Clear previous tags
             });
-        } else {
-            modalTags.textContent = 'No tags available';
-        }
 
-        // Display the modal
-        modal.style.display = 'block';
-    })
-    .catch(error => {
-        console.error('Error fetching image info:', error);
-        modalDescription.textContent = 'Error fetching image information.';
-        modalTags.innerHTML = ''; // Clear previous tags
-    });
-
-    // Change modal background color based on the key color of the image
-    const imgElement = new Image();
-    imgElement.src = imageUrl;
+        // Change modal background color based on the key color of the image
+        const imgElement = new Image();
+        imgElement.src = imageUrl;
 
 
 
 
-    getKeyColor(imgElement,ImageBGpalette).then(color => {
-        modalContent.style.backgroundColor = color.closestMatch;
-    }).catch(error => {
-        modalContent.style.backgroundColor = "var(--color-primary-background)";
-        console.error('Error getting key color:', error);
-    });
+        getKeyColor(imgElement, ImageBGpalette).then(color => {
+            modalContent.style.backgroundColor = color.closestMatch;
+        }).catch(error => {
+            modalContent.style.backgroundColor = "var(--color-primary-background)";
+            console.error('Error getting key color:', error);
+        });
 
-    // Set up arrow key navigation
-    window.addEventListener('keydown', handleArrowKeys);
-}
+        // Set up arrow key navigation
+        window.addEventListener('keydown', handleArrowKeys);
+    }
 
-// Function to handle arrow key navigation
-function handleArrowKeys(event) {
-    if (document.activeElement !== modalDescription) {
-        if (event.key === 'ArrowRight') {
-            currentImageIndex = (currentImageIndex + 1) % imagesInView.length;
-            openImageModal(imagesInView[currentImageIndex]);
-        } else if (event.key === 'ArrowLeft') {
-            currentImageIndex = (currentImageIndex - 1 + imagesInView.length) % imagesInView.length;
-            openImageModal(imagesInView[currentImageIndex]);
+    // Function to handle arrow key navigation
+
+    function handleArrowKeys(event) {
+        if (document.activeElement !== modalDescription && document.activeElement !== addTagButton) {
+            if (event.key === 'ArrowRight') {
+                currentImageIndex = (currentImageIndex + 1) % imagesInView.length;
+                openImageModal(imagesInView[currentImageIndex]);
+            } else if (event.key === 'ArrowLeft') {
+                currentImageIndex = (currentImageIndex - 1 + imagesInView.length) % imagesInView.length;
+                openImageModal(imagesInView[currentImageIndex]);
+            }
         }
     }
-}
+    
 
-// Function to initialize images in view
-function initializeImagesInView() {
-    imagesInView = Array.from(gallery.querySelectorAll('div[style]')).map(imgDiv => {
-        return imgDiv.style.backgroundImage.slice(5, -2); // Extract the URL from style
-    });
-}
+    // Function to initialize images in view
+    function initializeImagesInView() {
+        imagesInView = Array.from(gallery.querySelectorAll('div[style]')).map(imgDiv => {
+            return imgDiv.style.backgroundImage.slice(5, -2); // Extract the URL from style
+        });
+    }
     // Close modal when the close ("X") button is clicked
     closeModal.addEventListener('click', () => {
         modal.style.display = 'none';
@@ -376,31 +464,31 @@ function initializeImagesInView() {
             modal.style.display = 'none';
         }
     });
-// Function to remove a tag using the API
-function removeTag(imageName, tag, tagElement) {
-    fetch(`/api/images/${encodeURIComponent(imageName)}/tags/${encodeURIComponent(tag)}`, {
-        method: 'DELETE'
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to remove tag');
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log(data.message);
-        // Remove the tag element from the DOM
-        tagElement.remove();
-    })
-    .catch(error => {
-        console.error('Error removing tag:', error);
-    });
-}
+    // Function to remove a tag using the API
+    function removeTag(imageName, tag, tagElement) {
+        fetch(`/api/images/${encodeURIComponent(imageName)}/tags/${encodeURIComponent(tag)}`, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to remove tag');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data.message);
+                // Remove the tag element from the DOM
+                tagElement.remove();
+            })
+            .catch(error => {
+                console.error('Error removing tag:', error);
+            });
+    }
     /* ===================================================
        5. WINDOW EVENTS: RESIZE & SCROLL
        =================================================== */
     // Recalculate image layout on window resize
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         gallery.innerHTML = '';
         processedImagesCount = 0;
         arrangeImages(imagesData);
@@ -411,7 +499,7 @@ function removeTag(imageName, tag, tagElement) {
 
     window.addEventListener('scroll', () => {
         const currentScrollTop = window.scrollY;
-    
+
         // If scrolling down and near the bottom of the page
         if (currentScrollTop > lastScrollTop) {
             if (!isScrollTriggered && !isFetching && (window.innerHeight + window.scrollY) >= document.body.offsetHeight - SCROLL_BOUND_TRIGGER) {
@@ -425,14 +513,14 @@ function removeTag(imageName, tag, tagElement) {
                 });
             }
         }
-    
+
         lastScrollTop = currentScrollTop; // Update last scroll position
     });
 
     /* ===================================================
        6. SEARCH FUNCTIONALITY (ENTER KEY)
        =================================================== */
-    window.searchImages = function(event) {
+    window.searchImages = function (event) {
         if (event.key === 'Enter') {
             currentPage = 1;
             isFetching = false;

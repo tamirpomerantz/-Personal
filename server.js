@@ -216,6 +216,9 @@ const updateJSONFile = async () => {
 
     const photoFiles = await fs.readdir(photosDir);
 
+    // Create a new object to store new images
+    const newImageData = {};
+
     for (const photo of photoFiles) {
       if (!imageData[photo] && /\.(jpg|jpeg|png|gif|webp)$/i.test(photo)) {
         const photoPath = path.join(photosDir, photo);
@@ -223,7 +226,7 @@ const updateJSONFile = async () => {
         const text = await performOCR(resizedPhotoPath);
         const base64Image = await encodeImage(resizedPhotoPath);
         const tags = await getTagsFromOpenAI(base64Image);
-        imageData[photo] = { text, tags };
+        newImageData[photo] = { text, tags };
 
         if (resizedPhotoPath !== photoPath) {
           await fs.remove(resizedPhotoPath); // Clean up the resized image file
@@ -231,7 +234,10 @@ const updateJSONFile = async () => {
       }
     }
 
-    await fs.writeJson(jsonFilePath, imageData, { spaces: 2 });
+    // Merge existing imageData with newImageData, ensuring new images are added at the end
+    const updatedImageData = { ...imageData, ...newImageData };
+
+    await fs.writeJson(jsonFilePath, updatedImageData, { spaces: 2 });
     console.log('Updated images.json successfully!');
   } catch (err) {
     console.error('Error processing images:', err);

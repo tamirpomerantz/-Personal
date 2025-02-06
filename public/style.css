@@ -394,6 +394,42 @@
   #modal-tags .tag:hover {
     background: color-mix(in srgb, var(--color-hover-base) 20%, transparent);
   }
+
+
+
+  #modal-tags #addtagbutton {
+    opacity: 0;
+    pointer-events: none;
+    transition: var(--transition-linear);
+    box-shadow: none;
+    background: color-mix(in srgb, var(--color-hover-base) 7%, transparent 93%);
+
+  }
+
+  #modal-tags:hover #addtagbutton:hover {
+    background: color-mix(in srgb, var(--color-hover-base) 15%, transparent 85%);
+  }
+
+  #modal-tags #addtagbutton:focus,
+  #modal-tags:hover #addtagbutton:focus {
+      opacity: 1;
+    pointer-events: all;
+    background-color: var(--color-primary-background);
+    box-shadow: var(--shadow-1);
+    outline: none;
+    border: none;
+  }
+
+
+  #modal-tags:hover #addtagbutton {
+    opacity: 1;
+    background: color-mix(in srgb, var(--color-hover-base) 7%, transparent 93%);
+    pointer-events: all;
+  }
+
+
+
+
   #modal-description {
     padding:var(--space-m);
     background: transparent;
