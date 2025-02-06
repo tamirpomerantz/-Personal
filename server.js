@@ -465,17 +465,30 @@ const addTagToImage = async (imageName, tagToAdd) => {
   }
 };
 
-// Function to update the description of a specific image
+
 const updateImageDescription = async (imageName, newDescription) => {
   if (imageData[imageName]) {
     imageData[imageName].tags.context = newDescription;
-    await fs.writeJson(jsonFilePath, imageData, { spaces: 2 });
+
+    // Convert the JSON object to a string with a custom replacer function
+    const jsonString = JSON.stringify(imageData, (key, value) => {
+      // If the value is an object, sort its keys
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        return Object.keys(value).sort().reduce((sorted, key) => {
+          sorted[key] = value[key];
+          return sorted;
+        }, {});
+      }
+      return value;
+    }, 2);
+
+    // Write the JSON string to the file
+    await fs.writeFile(jsonFilePath, jsonString);
     console.log(`Updated description for image "${imageName}".`);
   } else {
     console.warn(`Image "${imageName}" not found.`);
   }
 };
-
 
 // API endpoint to remove a tag from a specific image
 app.delete('/api/images/:imageName/tags/:tag', async (req, res) => {
