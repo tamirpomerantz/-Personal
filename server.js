@@ -10,6 +10,7 @@ const fs = require('fs-extra');
 const axios = require('axios');
 require('dotenv').config(); // Add this line at the top of your file
 const { createWorker } = require('tesseract.js');
+const pageSize = 20;
 
 // Images Directory:
 const photosDir = path.join(__dirname, '../', '');
@@ -22,14 +23,11 @@ const apiKey = process.env.OPENAI_API_KEY; // Use the environment variable
 // 2️⃣ CONSTANTS (PROMPT)
 // =====================================================
 const CONST_PROMPT = `    
-     
-Tag images accurately for a searchable database. Focus on specific elements instead of generic terms like “image,” “photo,” or “screenshot.” Identify key components, themes, or subjects based on the image type (e.g., UI elements, design patterns, objects, actions, or visual styles).
-
-Role: You are an image classification expert generating highly relevant, clear, and searchable tags for images, ensuring precise categorization.
-
-Action
-	1.	Describe the image in two sentences (mention key details and composition).
-  2.	List 2-5 of the colors in the image, use only these:  "Red",
+describe the image accurately for a searchable database. Focus on specific elements instead of generic terms like “image,” “photo,” or “screenshot.” Identify key components, themes, or subjects based on the image type (e.g., UI elements, design patterns, objects, actions, or visual styles).
+You are an image classification expert generating highly relevant, clear, and searchable tags for images, ensuring precise categorization.
+Describe the image in two sentences (mention key details and composition).
+think of 3-4 tags that are useful for this image.
+then, List 2-5 of the colors in the image, use only these:  "Red",
   "Yellow",
   "Green",
   "Blue",
@@ -53,19 +51,10 @@ Action
   "Coral",
   "Monochrome",
   "Hot Pink"
-	3.	Identify distinct elements (e.g., UI components, objects, people, colors, styles, or themes).
-	4.	Wrap tags in <tags> and </tags> markers (use only once).
-	5.	Ensure clarity—tags should be concise, specific, and useful for search.
-
-Format
-	1.	Two-sentence description.
-	2.	Comma-separated tags inside <tags> and </tags> markers.
-	2.	Comma-separated colors inside <colors> and </colors> markers.
-
 Example
 “This is a web dashboard with a sidebar, filter toolbar, and a sortable data table. It features KPI metrics, export options, and an expand/collapse row feature.”
-<tags>Dashboard, Sidebar Navigation, Data Table, Filter Toolbar, "Export Button, KPI Metrics, Expand/Collapse Rows</tags>
 <colors>Pink, Coral</colors>
+<tags>Button, Toggle, Onboarding</tags>
 `;
 
 // =====================================================
@@ -305,15 +294,15 @@ const searchResultsOrder = {};
 // API endpoint to get image data with pagination and optional search
 app.get('/api/images', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const pageSize = 20;
   const search = req.query.search?.toLowerCase();
-  console.log(`Requested page ${page} of query ${search}`);
+  const shuffle = req.query.shuffle === 'true'; // Check if shuffle parameter is set to 'true'
+  console.log(`Requested page ${page} of query ${search} and shuffle ${shuffle}`);
 
   // Generate a unique key for the search query
   const searchKey = search || 'all';
 
-  // Check if we already have a randomized order for this search query
-  if (!searchResultsOrder[searchKey]) {
+  // Check if we already have a randomized order for this search query and if the shuffle state has changed
+  if (!searchResultsOrder[searchKey] || searchResultsOrder[searchKey].shuffle !== shuffle) {
     // Get all keys and sort them in reverse chronological order
     const allKeys = Object.keys(imageData).sort((a, b) => {
       return new Date(imageData[b].date) - new Date(imageData[a].date);
@@ -327,18 +316,20 @@ app.get('/api/images', async (req, res) => {
               (tags && tags.tags && Array.isArray(tags.tags) && tags.tags.some(tag => tag.toLowerCase().includes(search))));
     });
 
-    // Randomize the order of filtered keys
-    searchResultsOrder[searchKey] = filteredKeys.sort(() => Math.random() - 0.5);
+    // Randomize the order of filtered keys if shuffle is true
+    const orderedKeys = shuffle ? filteredKeys.sort(() => Math.random() - 0.5) : filteredKeys;
+
+    // Store the ordered keys and shuffle state
+    searchResultsOrder[searchKey] = { keys: orderedKeys, shuffle };
   }
 
-  const paginatedKeys = searchResultsOrder[searchKey].slice((page - 1) * pageSize, page * pageSize);
+  const paginatedKeys = searchResultsOrder[searchKey].keys.slice((page - 1) * pageSize, page * pageSize);
 
   const imagesToShowPromises = paginatedKeys.map(async key => {
     const imagePath = `../${key}`;
     if (fs.existsSync(imagePath)) {
       const dimensions = await getImageDimensions(imagePath);
       return {
-
         // src:adjustImagePath(`/photos/${key}`),
         src: `photos/${encodeURIComponent(key)}`,
         text: imageData[key].text,
@@ -357,6 +348,7 @@ app.get('/api/images', async (req, res) => {
 
   res.json(imagesToShow);
 });
+
 
 // Route for filtering by tag
 app.get('/filter', (req, res) => {

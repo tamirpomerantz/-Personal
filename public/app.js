@@ -1,6 +1,3 @@
-// to fix:
-// editing descriptoin
-
 
 document.addEventListener('DOMContentLoaded', function() {
     /* ===================================================
@@ -17,9 +14,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const gallery = document.getElementById('image-gallery');
     const searchBox = document.getElementById('search-box');
     const modal = document.getElementById('image-modal');
+    const modalContent = document.querySelector('.modal-content');
     const modalImage = document.getElementById('modal-image');
     const modalTags = document.getElementById('modal-tags');
     const modalDescription = document.getElementById('modal-description');
+    const ImageBGpalette = [  "#E1F2D9","#E4E6FE","#EEEEEE","#FED4E9","#FEE2BA","#FFECBA"];
 
     modalDescription.setAttribute('contenteditable', 'true');
     // modalDescription.addEventListener('blur', function() {
@@ -94,11 +93,30 @@ function updateDescription() {
         // searchBox.focus(); // Optionally focus the input field after clearing
     });
 
+    let FetchIsRandom = false;
+
+        // Add event listener for the random toggle button
+        const randomToggleButton = document.getElementById('random-toggle');
+        randomToggleButton.addEventListener('click', function() {
+            FetchIsRandom = !FetchIsRandom; // Toggle the random state
+    
+            // Update the icon based on the current state
+            if (FetchIsRandom) {
+                randomToggleButton.classList.add('active-toggle');
+            } else {
+                randomToggleButton.classList.remove('active-toggle');
+            }
+            // Optionally, reload images with the new random state
+            currentPage = 1;
+            loadImages(searchBox.value.trim(), false, FetchIsRandom);
+        });
+
+
     /* ===================================================
        3. IMAGE LOADING & ARRANGEMENT FUNCTIONS
        =================================================== */
     // Load images from the server with optional search term and append mode
-    function loadImages(search, append = false) {
+    function loadImages(search, append = false, isRandom = FetchIsRandom) {
         const fetchingStatusDiv = document.getElementById('fetching-status');
         const endOfResultsStatusDiv = document.getElementById('end-of-results-status');
     
@@ -112,9 +130,9 @@ function updateDescription() {
         setTimeout(() => { fetchingStatusDiv.style.display = 'none'; }, 1000);
     
         isFetching = true; // Set flag to indicate fetching is underway
-        console.log(`firing loadImages page ${currentPage} q=${search}`);
+        console.log(`firing loadImages page ${currentPage} q=${search} shuffle=${isRandom}`);
         return new Promise((resolve) => {
-            fetch(`/api/images?page=${currentPage}&search=${search}`)
+            fetch(`/api/images?page=${currentPage}&search=${search}&shuffle=${isRandom}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log(data);
@@ -157,7 +175,6 @@ function updateDescription() {
                 });
         });
     }
-    
     // Arrange new images into rows based on their aspect ratios
     function arrangeImages(newImages) {
         const galleryWidth = gallery.clientWidth; // Use the actual width of the gallery for the grid
@@ -184,6 +201,7 @@ function updateDescription() {
         if (currentRow.length > 0) {
             placeRow(currentRow, galleryWidth, gap);
         }
+        initializeImagesInView();
 
         // Attach click events to the newly added images for opening the modal
         gallery.querySelectorAll('div[style]').forEach(imgDiv => {
@@ -229,26 +247,31 @@ function updateDescription() {
        4. MODAL FUNCTIONALITY
        =================================================== */
     // Open the modal with the selected image and fetch its details
-    function openImageModal(imageUrl) {
-        // Set modal image styles
-        modalImage.style.backgroundImage = `url("${imageUrl}")`;
-        modalImage.style.backgroundSize = 'contain';
-        modalImage.style.backgroundPosition = 'center';
-        modalImage.style.backgroundRepeat = 'no-repeat';
-    
-        // Initialize Panzoom on the modal image for zooming and panning
-        const panzoomInstance = panzoom(modalImage, {
-            maxScale: 5,       // Maximum zoom level
-            contain: 'inside'  // Prevent panning outside the bounds
-        });
-    
-        // Add zooming with the mouse wheel
-        modalImage.addEventListener('wheel', panzoomInstance.zoomWithWheel);
-    
-        // Decode the image name from the URL
-        const imageName = decodeURIComponent(imageUrl).split('/').pop();
-    
-       
+  
+let currentImageIndex = 0;
+let imagesInView = [];
+
+// Function to open the image modal and set up navigation
+function openImageModal(imageUrl) {
+    // Set modal image styles
+    modalImage.style.backgroundImage = `url("${imageUrl}")`;
+    modalImage.style.backgroundSize = 'contain';
+    modalImage.style.backgroundPosition = 'center';
+    modalImage.style.backgroundRepeat = 'no-repeat';
+
+    // Initialize Panzoom on the modal image for zooming and panning
+    const panzoomInstance = panzoom(modalImage, {
+        maxScale: 5,       // Maximum zoom level
+        contain: 'inside'  // Prevent panning outside the bounds
+    });
+
+    // Add zooming with the mouse wheel
+    modalImage.addEventListener('wheel', panzoomInstance.zoomWithWheel);
+
+    // Decode the image name from the URL
+    const imageName = decodeURIComponent(imageUrl).split('/').pop();
+
+    // Fetch image info
     fetch(`/image-info?imageName=${encodeURIComponent(imageName)}`)
     .then(response => {
         if (!response.ok) {
@@ -259,7 +282,6 @@ function updateDescription() {
     .then(data => {
         // Set modal description and tags
         modalDescription.textContent = data.context || 'No description available';
-
 
         modalTags.innerHTML = ''; // Clear previous tags
 
@@ -305,8 +327,44 @@ function updateDescription() {
         modalDescription.textContent = 'Error fetching image information.';
         modalTags.innerHTML = ''; // Clear previous tags
     });
+
+    // Change modal background color based on the key color of the image
+    const imgElement = new Image();
+    imgElement.src = imageUrl;
+
+
+
+
+    getKeyColor(imgElement,ImageBGpalette).then(color => {
+        modalContent.style.backgroundColor = color.closestMatch;
+    }).catch(error => {
+        modalContent.style.backgroundColor = "var(--color-primary-background)";
+        console.error('Error getting key color:', error);
+    });
+
+    // Set up arrow key navigation
+    window.addEventListener('keydown', handleArrowKeys);
 }
 
+// Function to handle arrow key navigation
+function handleArrowKeys(event) {
+    if (document.activeElement !== modalDescription) {
+        if (event.key === 'ArrowRight') {
+            currentImageIndex = (currentImageIndex + 1) % imagesInView.length;
+            openImageModal(imagesInView[currentImageIndex]);
+        } else if (event.key === 'ArrowLeft') {
+            currentImageIndex = (currentImageIndex - 1 + imagesInView.length) % imagesInView.length;
+            openImageModal(imagesInView[currentImageIndex]);
+        }
+    }
+}
+
+// Function to initialize images in view
+function initializeImagesInView() {
+    imagesInView = Array.from(gallery.querySelectorAll('div[style]')).map(imgDiv => {
+        return imgDiv.style.backgroundImage.slice(5, -2); // Extract the URL from style
+    });
+}
     // Close modal when the close ("X") button is clicked
     closeModal.addEventListener('click', () => {
         modal.style.display = 'none';

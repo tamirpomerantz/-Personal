@@ -37,6 +37,11 @@
   
     --transition-linear: all 0.2s linear;
     --transition-move: all 0.3s ease-out;
+
+    --shadow-1: 
+    0px 0.3px 1.7px -2px rgba(0, 0, 0, 0.028),
+    0px 0.9px 5.6px -2px rgba(0, 0, 0, 0.042),
+    0px 4px 25px -2px rgba(0, 0, 0, 0.07);
   }
   
   html,
@@ -251,21 +256,21 @@
   }
   
   #fetching-status {
-    background: var(--color-hover-base);
+    background: var(--color-primary);
     filter: blur(24px);
-    mix-blend-mode: color-burn;
+    mix-blend-mode: normal;
     opacity: 0;
     animation: blinkAnimation 1s linear;
-    height: 30vh;
+    height: 15vh;
     transform: translateY(15vh) scale(1.2);
   }
   
   #end-of-results-status {
-    background: var(--color-hover-base);
+    background: var(--color-primary);
     filter: blur(24px);
-    mix-blend-mode: color-burn;
+    mix-blend-mode: normal;
     animation: blinkAnimation 1s linear;
-    height: 30vh;
+    height: 15vh;
     transform: translateY(15vh) scale(1.2);
   }
   
@@ -304,6 +309,7 @@
     padding: 0;
     border-radius: var(--radius-l);
     overflow: hidden;
+    transition: var(--transition-linear);
   }
   
   .right-panel {
@@ -336,7 +342,7 @@
   }
   
   #modal-tags .tag {
-    background: color-mix(in srgb, var(--color-hover-base) 15%, white 85%);
+    background: color-mix(in srgb, var(--color-hover-base) 15%, transparent 85%);
     margin: var(--space-m) var(--space-m) 0 0;
     padding: var(--space-s) var(--space-m);
     border-radius: var(--radius-m);
@@ -386,26 +392,28 @@
 
 
   #modal-tags .tag:hover {
-    background: color-mix(in srgb, var(--color-hover-base) 20%, white 80%);
+    background: color-mix(in srgb, var(--color-hover-base) 20%, transparent);
   }
   #modal-description {
     padding:var(--space-m);
     background: transparent;
-    transition: var(--transition-linear);
+    transition: var(--transition-move);
     outline: 0px solid transparent;
     border-radius: var(--radius-m);
     position: relative;
+    transform: translateY(calc(-1 * var(--space-m))) translateX(calc(-1 * var(--space-m)));
   }
   #modal-description::after {
     opacity: 0; /* Hidden when not focused */
     transition: var(--transition-linear)
   }
   #modal-description:hover {
-    background: color-mix(in srgb, var(--color-hover-base) 10%, white 90%);
+    background: var(--color-hover)
   }
 
   #modal-description:focus {
     background: var(--color-hover);
+    transform: translateY(0) translateX(0);
     }
 
     #modal-description:focus::after {
@@ -425,7 +433,7 @@
     }
 
     #modal-description.updating {
-    background: color-mix(in srgb, var(--color-hover-base) 30%, white 70%);
+    background: color-mix(in srgb, var(--color-hover-base) 30%, transparent 70%);
       transform: scale(0.95);
       color: color-mix(in srgb, var(--color-primary-foreground) 80%, transparent);
       border-radius: var(--radius-m);
@@ -458,4 +466,41 @@
     right: 20px;
     font-size: 28px;
     cursor: pointer;
+  }
+
+
+
+  #random-toggle {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    padding:var(--space-m);
+    outline:none;
+    border:none;
+    background-color: var(--color-primary-background);
+    box-shadow: var(--shadow-1);
+    border-radius: var(--radius-m);
+    color: var(--color-primary-foreground);
+    transition: var(--transition-move);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #random-toggle:hover {
+    background-color: var(--color-hover);
+    color:var(--color-primary);
+  }
+
+  #random-toggle.active-toggle {
+    background-color: color-mix(in srgb, var(--color-primary) 10%, white 90%);
+    border-radius: var(--radius-l);
+    color: var(--color-primary);
+  }
+
+  #random-toggle.active-toggle:hover {
+    background-color: color-mix(in srgb, var(--color-primary) 20%, white 80%);
+    border-radius: var(--radius-l);
+    color: var(--color-primary);
   }

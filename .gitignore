@@ -3,3 +3,5 @@ images.json
 *.log
 /node_modules/
 .env
+todo.txt
+_images.json

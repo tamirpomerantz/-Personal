@@ -11,6 +11,9 @@
     <link rel="manifest" href="/site.webmanifest">
 </head>
 <body>
+    <button id="random-toggle" class="icon-button">
+        <i data-feather="shuffle"></i>
+    </button>
     <div class="text-search-container">
         <input type="text" id="search-box" placeholder="Search images..." onkeypress="searchImages(event)">
         <div class="button-clear button-clear--hidden"><i data-feather="x"></i></div>
@@ -48,6 +51,8 @@
    'stroke-linejoin': 'round',
   });
     </script>
+    <script src="colors.js"></script>
     <script src="app.js"></script>
+
 </body>
 </html>
