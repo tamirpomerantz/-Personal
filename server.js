@@ -218,7 +218,6 @@ const updateJSONFile = async () => {
 
     // Create a new object to store new images
     const newImageData = {};
-
     for (const photo of photoFiles) {
       if (!imageData[photo] && /\.(jpg|jpeg|png|gif|webp)$/i.test(photo)) {
         const photoPath = path.join(photosDir, photo);
@@ -226,7 +225,11 @@ const updateJSONFile = async () => {
         const text = await performOCR(resizedPhotoPath);
         const base64Image = await encodeImage(resizedPhotoPath);
         const tags = await getTagsFromOpenAI(base64Image);
-        newImageData[photo] = { text, tags };
+        
+        // Add date and time of addition
+        const dateAdded = new Date().toISOString();
+        
+        newImageData[photo] = { text, tags, date: dateAdded };
 
         if (resizedPhotoPath !== photoPath) {
           await fs.remove(resizedPhotoPath); // Clean up the resized image file
@@ -311,7 +314,7 @@ app.get('/api/images', async (req, res) => {
   if (!searchResultsOrder[searchKey] || searchResultsOrder[searchKey].shuffle !== shuffle) {
     // Get all keys and sort them in reverse chronological order
     const allKeys = Object.keys(imageData).sort((a, b) => {
-      return new Date(imageData[b].date) - new Date(imageData[a].date);
+      return new Date(imageData[a].date) - new Date(imageData[b].date);
     });
 
     const filteredKeys = allKeys.filter(key => {
@@ -465,30 +468,17 @@ const addTagToImage = async (imageName, tagToAdd) => {
   }
 };
 
-
+// Function to update the description of a specific image
 const updateImageDescription = async (imageName, newDescription) => {
   if (imageData[imageName]) {
     imageData[imageName].tags.context = newDescription;
-
-    // Convert the JSON object to a string with a custom replacer function
-    const jsonString = JSON.stringify(imageData, (key, value) => {
-      // If the value is an object, sort its keys
-      if (value && typeof value === 'object' && !Array.isArray(value)) {
-        return Object.keys(value).sort().reduce((sorted, key) => {
-          sorted[key] = value[key];
-          return sorted;
-        }, {});
-      }
-      return value;
-    }, 2);
-
-    // Write the JSON string to the file
-    await fs.writeFile(jsonFilePath, jsonString);
+    await fs.writeJson(jsonFilePath, imageData, { spaces: 2 });
     console.log(`Updated description for image "${imageName}".`);
   } else {
     console.warn(`Image "${imageName}" not found.`);
   }
 };
+
 
 // API endpoint to remove a tag from a specific image
 app.delete('/api/images/:imageName/tags/:tag', async (req, res) => {
