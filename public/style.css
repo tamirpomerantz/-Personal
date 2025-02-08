@@ -44,8 +44,7 @@
     0px 4px 25px -2px rgba(0, 0, 0, 0.07);
   }
   
-  html,
-  [data-theme="light"] {
+  html {
     --color-primary: #0066F4;
     --color-hover-base: rgba(23, 77, 100, 1);
     --color-secondary: #EF89FD;
@@ -58,6 +57,20 @@
     --color-tertiary-foreground: rgba(0, 0, 0, 0.4);
     --color-border-primary: rgba(0, 0, 0, 0.1);
     --color-border-secondary: rgba(0, 0, 0, 0.15);
+  }
+  .dark-mode {
+    --color-primary: #0066F4;
+    --color-hover-base: rgb(186, 203, 211);
+    --color-secondary: #EF89FD;
+    --color-primary-background: #121212;
+    --color-content-background: color-mix(in srgb, var(--color-hover-base) 5%, transparent);
+    --color-hover: color-mix(in srgb, var(--color-hover-base) 5%, transparent);
+    --color-primary-foreground: rgba(255, 255, 255, 0.9);
+    --color-primary-negative: rgba(0, 0, 0, 0.9);
+    --color-secondary-foreground: rgba(255, 255, 255, 0.6);
+    --color-tertiary-foreground: rgba(255, 255, 255, 0.4);
+    --color-border-primary: rgba(255, 255, 255, 0.1);
+    --color-border-secondary: rgba(255, 255, 255, 0.15);
   }
   
   /* ===================================================
@@ -342,6 +355,7 @@
   }
   
   #modal-tags .tag {
+    color: var(--color-primary-foreground);
     background: color-mix(in srgb, var(--color-hover-base) 15%, transparent 85%);
     margin: var(--space-m) var(--space-m) 0 0;
     padding: var(--space-s) var(--space-m);
@@ -358,6 +372,7 @@
   }
 
   #modal-tags .tag .tag-text {
+    color: var(--color-primary-foreground);
     text-align: center;
     max-width: 180px;
     white-space: nowrap;
@@ -372,7 +387,7 @@
     justify-content: center;
     align-items: center;
     top:0px;
-    background: color-mix(in srgb, var(--color-hover-base) 30%, white 70%);
+    background: color-mix(in srgb, var(--color-hover-base) 30%, var(--color-primary-background) 70%);
     color: var(--color-primary-foreground);
     height: 100%;
     right: 0px;
@@ -403,7 +418,11 @@
     transition: var(--transition-linear);
     box-shadow: none;
     background: color-mix(in srgb, var(--color-hover-base) 7%, transparent 93%);
+    
 
+  }
+  #modal-tags #addtagbutton:empty {
+    width: 72px; /* Set your desired minimum width */
   }
 
   #modal-tags:hover #addtagbutton:hover {
@@ -415,6 +434,7 @@
       opacity: 1;
     pointer-events: all;
     background-color: var(--color-primary-background);
+    color: var(--color-primary-foreground);
     box-shadow: var(--shadow-1);
     outline: none;
     border: none;
@@ -437,6 +457,7 @@
     outline: 0px solid transparent;
     border-radius: var(--radius-m);
     position: relative;
+    color: var(--color-primary-foreground);
     transform: translateY(calc(-1 * var(--space-m))) translateX(calc(-1 * var(--space-m)));
   }
   #modal-description::after {
@@ -502,6 +523,7 @@
     right: 20px;
     font-size: 28px;
     cursor: pointer;
+    color: var(--color-primary-foreground);
   }
 
 

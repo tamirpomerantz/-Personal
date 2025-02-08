@@ -314,7 +314,7 @@ app.get('/api/images', async (req, res) => {
   if (!searchResultsOrder[searchKey] || searchResultsOrder[searchKey].shuffle !== shuffle) {
     // Get all keys and sort them in reverse chronological order
     const allKeys = Object.keys(imageData).sort((a, b) => {
-      return new Date(imageData[a].date) - new Date(imageData[b].date);
+      return new Date(imageData[b].date) - new Date(imageData[a].date);
     });
 
     const filteredKeys = allKeys.filter(key => {

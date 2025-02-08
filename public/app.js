@@ -420,14 +420,20 @@ addTagButton.addEventListener('blur', function () {
 
 
 
-
         getKeyColor(imgElement, ImageBGpalette).then(color => {
+            console.log(color.closestMatch);
             modalContent.style.backgroundColor = color.closestMatch;
+        
+            // Check if the color is darker than gray
+            if (isColorDarkerThanGray(color.closestMatch)) {
+                modal.classList.add('dark-mode');
+            } else {
+                modal.classList.remove('dark-mode');
+            }
         }).catch(error => {
             modalContent.style.backgroundColor = "var(--color-primary-background)";
             console.error('Error getting key color:', error);
         });
-
         // Set up arrow key navigation
         window.addEventListener('keydown', handleArrowKeys);
     }
@@ -527,6 +533,21 @@ addTagButton.addEventListener('blur', function () {
             loadImages(event.target.value.trim(), false); // Trigger a new search (not appending)
         }
     };
+
+// Function to determine if a color is darker than gray
+function isColorDarkerThanGray(rgbaColor) {
+    console.log(rgbaColor);
+    // Extract RGB values from the rgba string
+    const rgba = rgbaColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!rgba) {
+        throw new Error('Invalid RGBA color format');
+    }
+    const [_, r, g, b] = rgba.map(Number);
+    // Calculate brightness
+    const brightness = (0.299 * r + 0.587 * g + 0.114 * b);
+    // Compare with gray brightness (128)
+    return brightness < 128;
+}
 
     /* ===================================================
        7. INITIAL IMAGE LOAD
