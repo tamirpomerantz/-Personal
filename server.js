@@ -10,6 +10,7 @@ const fs = require('fs-extra');
 const axios = require('axios');
 require('dotenv').config(); // Add this line at the top of your file
 const { createWorker } = require('tesseract.js');
+let imageData;
 const pageSize = 20;
 
 // Images Directory:
@@ -18,6 +19,17 @@ const photosDir = path.join(__dirname, '../', '');
 // Images JSON:
 const jsonFilePath = path.join(__dirname, '/', 'images.json');
 const apiKey = process.env.OPENAI_API_KEY; // Use the environment variable
+// Ensure the JSON file exists, create an empty one if it doesn't
+(async () => {
+  if (!await fs.pathExists(jsonFilePath)) {
+    await fs.writeJson(jsonFilePath, {}, { spaces: 2 });
+    console.log('Created an empty images.json file.');
+  }
+  
+  // Call getImagesData after ensuring the file exists
+  imageData = getImagesData();
+})();
+
 
 // =====================================================
 // 2️⃣ CONSTANTS (PROMPT)
@@ -199,7 +211,6 @@ const resizeImage = async (imagePath) => {
   }
   return imagePath;
 };
-
 // =====================================================
 // 6️⃣ UPDATE JSON DATABASE FUNCTION & STARTUP CALL
 // =====================================================
@@ -211,6 +222,7 @@ const updateJSONFile = async () => {
     if (await fs.pathExists(jsonFilePath)) {
       imageData = await fs.readJson(jsonFilePath);
     } else {
+      // Create an empty JSON file if it doesn't exist
       await fs.writeJson(jsonFilePath, imageData, { spaces: 2 });
     }
 
@@ -291,7 +303,7 @@ const getImagesData = () => {
 
     return reversedData;
 };
-const imageData = getImagesData();
+// const imageData = getImagesData();
 
 // In-memory store for search results order
 const searchResultsOrder = {};
