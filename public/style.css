@@ -170,9 +170,40 @@
     justify-content: center;
     padding: 100px 0 0;
     height: 80vh;
+    transition: var(--transition-move);
     animation: mainTitleAnimation 3.5s cubic-bezier(1,0,0,1) forwards;
   }
+
+  .main-title.animation-complete {
+    animation:none;
+    opacity: 1;
+    height: 100px;
+    filter: blur(4px);
+    font-size: 40px;
+      }
   
+      .main-title.animation-complete:hover {
+    filter: blur(0px);
+    /* height: 140px; */
+    /* font-size: 48px; */
+      }   
+  .main-title.animation-complete .title-letter{
+    transition: var(--transition-move);
+  }
+
+
+      .main-title.animation-complete .title-letter:hover {
+          filter: blur(4px); 
+      }
+      
+      .main-title.animation-complete .title-letter:hover + .title-letter {
+        filter: blur(2px);
+      }
+      
+ 
+    
+  
+      
   /* ===================================================
      6. SEARCH & STATUS STYLES
      =================================================== */
@@ -299,7 +330,6 @@
      8. MODAL STYLES
      =================================================== */
   .modal {
-    display: none; /* Hidden by default */
     position: fixed;
     z-index: 2;
     left: 0;
@@ -308,6 +338,15 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.8);
   }
+  .modal.modal-hide {
+opacity: 0;
+pointer-events: none;
+  }
+  .modal.modal-hide .modal-content {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.02) translateY(-48%);
+  }
   
   .modal-content {
     position: relative;
@@ -315,7 +354,7 @@
     height: 80%;
     margin: auto;
     top: 50%;
-    transform: translateY(-50%);
+    transform: scale(1) translateY(-50%);
     background-color: color-mix(in srgb, var(--color-primary-background) 95%, var(--color-hover-base) 5%);
     display: flex;
     flex-direction: row;
