@@ -24,6 +24,15 @@ function setupEvents() {
     }
   });
 
+  searchBox.addEventListener('blur', function(event) {
+    // Small delay to allow for tag clicks to register
+    setTimeout(() => {
+      if (!tagsWrap.contains(document.activeElement)) {
+        tagsWrap.classList.add('container-hide');
+      }
+    }, 200);
+  });
+  
   // Show or hide the clear button based on input value
   searchBox.addEventListener('input', async function () {
     if (searchBox.value.trim() !== '') {

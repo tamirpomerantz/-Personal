@@ -22,7 +22,7 @@ Place the **じ Personal** folder inside the folder that contains your screensho
 ├── [your image files…]
 └── じ Personal
     ├── public/
-    ├── server.js
+    ├── server/server.js
     ├── images.json
     ├── package.json
     ├── .env
@@ -61,7 +61,7 @@ OPENAI_API_KEY=your-api-key-here
 To start the server, run the following command from within the server folder:
 
  ```bash
-node server.js
+node server/server
    ```
 
    The server will run on port 3000. You can access it by navigating to http://localhost:3000 in your web browser.
