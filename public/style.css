@@ -668,3 +668,42 @@
     pointer-events: none;
     height: 100px;
   }
+
+  .retag-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 16px;
+    font-size: 14px;
+    transition: background-color 0.2s;
+  }
+
+  .retag-button:hover {
+    background-color: var(--color-primary-dark);
+  }
+
+  .retag-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .retag-button svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Add animation for the loader icon */
+  .retag-button:disabled svg {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }

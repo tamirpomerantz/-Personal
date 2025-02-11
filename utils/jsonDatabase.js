@@ -4,6 +4,7 @@ const { photosDir, jsonFilePath, fs } = require('./config');
 const { resizeImage, performOCR } = require('./ocrResize');
 const { encodeImage } = require('./imageProcessing');
 const { getTagsFromOpenAI } = require('./aiTagging');
+const EventEmitter = require('events');
 
 const updateJSONFile = async () => {
   try {
@@ -19,36 +20,45 @@ const updateJSONFile = async () => {
 
     const photoFiles = await fs.readdir(photosDir);
     const newImageData = {};
+    let hasNewImages = false;
+
     for (const photo of photoFiles) {
       if (!imageData[photo] && /\.(jpg|jpeg|png|gif|webp)$/i.test(photo)) {
-        const photoPath = path.join(photosDir, photo);
-        const resizedPhotoPath = await resizeImage(photoPath);
-        const text = await performOCR(resizedPhotoPath);
-        const base64Image = await encodeImage(resizedPhotoPath);
-        const tags = await getTagsFromOpenAI(base64Image);
-        
+        hasNewImages = true;
         const dateAdded = new Date().toISOString();
-        newImageData[photo] = { text, tags, date: dateAdded };
-
-        if (resizedPhotoPath !== photoPath) {
-          await fs.remove(resizedPhotoPath);
-        }
+        newImageData[photo] = { 
+          text: '', 
+          tags: {
+            tags: [],
+            context: '',
+            colors: []
+          }, 
+          date: dateAdded,
+          needsTagging: true
+        };
       }
     }
 
-    const updatedImageData = { ...imageData, ...newImageData };
-    await fs.writeJson(jsonFilePath, updatedImageData, { spaces: 2 });
-    console.log('Updated images.json successfully!');
+    if (hasNewImages) {
+      const updatedImageData = { ...imageData, ...newImageData };
+      await fs.writeJson(jsonFilePath, updatedImageData, { spaces: 2 });
+      console.log('Updated images.json successfully!');
+      return true; // Return true if images were added
+    }
+    return false; // Return false if no images were added
   } catch (err) {
     console.error('Error processing images:', err);
+    return false;
   }
 };
+
 const watchPhotosDirectory = () => {
   const chokidar = require('chokidar');
+  const watcher = new EventEmitter();
   let isUpdating = false;
-  let initialRun = true; // Flag to track the initial run
+  let initialRun = true;
 
-  const watcher = chokidar.watch(photosDir, {
+  const fileWatcher = chokidar.watch(photosDir, {
     ignored: /(^|[\/\\])\../,
     persistent: true,
     depth: 0,
@@ -58,32 +68,38 @@ const watchPhotosDirectory = () => {
     }
   });
 
-  // Run updateJSONFile once at startup
-  watcher.on('ready', async () => {
+  fileWatcher.on('ready', async () => {
     if (!isUpdating) {
       isUpdating = true;
       try {
-        await updateJSONFile();
+        const hasNewImages = await updateJSONFile();
+        if (hasNewImages) {
+          watcher.emit('imagesUpdated');
+        }
       } finally {
         isUpdating = false;
-        initialRun = false; // Set initialRun to false after the first update
+        initialRun = false;
       }
     }
   });
 
-  watcher.on('add', async (pathAdded) => {
+  fileWatcher.on('add', async (pathAdded) => {
     if (!initialRun && /\.(png|webm|jpg)$/i.test(pathAdded)) {
-      // console.log(`File ${pathAdded} has been added`);
       if (!isUpdating) {
         isUpdating = true;
         try {
-          await updateJSONFile();
+          const hasNewImages = await updateJSONFile();
+          if (hasNewImages) {
+            watcher.emit('imagesUpdated');
+          }
         } finally {
           isUpdating = false;
         }
       }
     }
   });
+
+  return watcher;
 };
 
 module.exports = { updateJSONFile, watchPhotosDirectory };

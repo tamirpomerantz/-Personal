@@ -4,17 +4,31 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs-extra');
 const { getImagesData, getImageDimensions } = require('../utils/imageUtils');
+const { resizeImage, performOCR } = require('../utils/ocrResize');
+const { encodeImage } = require('../utils/imageProcessing');
+const { getTagsFromOpenAI } = require('../utils/aiTagging');
+const { photosDir } = require('../utils/config');
 
 // In-memory cache for image data and search ordering.
 let imageData = getImagesData();
 let searchResultsOrder = {};
 
+// Function to refresh the image data cache
+const refreshImageData = () => {
+  imageData = getImagesData();
+  searchResultsOrder = {}; // Clear search cache
+};
+
 // API endpoint to get image data with pagination and optional search
 router.get('/images', async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
+  // Refresh image data before processing the request
+  refreshImageData();
+  
+  const offset = parseInt(req.query.offset) || 0;
   const search = req.query.search?.toLowerCase();
   const shuffle = req.query.shuffle === 'true';
-  console.log(`Requested page ${page} of query ${search} and shuffle ${shuffle}`);
+  const pageSize = 20;
+  console.log(`Requested offset ${offset} of query ${search} and shuffle ${shuffle}`);
 
   const searchKey = search || 'all';
 
@@ -35,8 +49,8 @@ router.get('/images', async (req, res) => {
     searchResultsOrder[searchKey] = { keys: orderedKeys, shuffle };
   }
 
-  const pageSize = 20;
-  const paginatedKeys = searchResultsOrder[searchKey].keys.slice((page - 1) * pageSize, page * pageSize);
+  const paginatedKeys = searchResultsOrder[searchKey].keys.slice(offset, offset + pageSize);
+  const hasMore = offset + pageSize < searchResultsOrder[searchKey].keys.length;
 
   const imagesToShowPromises = paginatedKeys.map(async key => {
     const imagePath = `../${key}`;
@@ -57,7 +71,10 @@ router.get('/images', async (req, res) => {
   });
 
   const imagesToShow = (await Promise.all(imagesToShowPromises)).filter(Boolean);
-  res.json(imagesToShow);
+  res.json({
+    images: imagesToShow,
+    hasMore: hasMore
+  });
 });
 
 // Route for filtering by tag
@@ -114,12 +131,15 @@ router.get('/search', (req, res) => {
 
 // Endpoint for image info
 router.get('/image-info', (req, res) => {
-    console.log('aa')
     const imageName = decodeURIComponent(req.query.imageName);
     console.log('Received imageName:', imageName);
     const info = imageData[imageName];
     if (info) {
-        res.json({ tags: info.tags.tags, context: info.tags.context });
+        res.json({ 
+            tags: info.tags.tags, 
+            context: info.tags.context,
+            needsTagging: info.needsTagging || false
+        });
     } else {
         res.status(404).json({ error: 'Image not found' });
     }
@@ -198,6 +218,51 @@ router.put('/images/:imageName/description', async (req, res) => {
     res.status(200).json({ message: `Description updated for image "${imageName}".` });
   } catch (error) {
     res.status(500).json({ error: `Failed to update description: ${error.message}` });
+  }
+});
+
+// API endpoint to retag an image using AI
+router.post('/retag-image', async (req, res) => {
+  const { imageName } = req.body;
+  
+  try {
+    if (!imageData[imageName]) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    const photoPath = path.join(photosDir, imageName);
+    const resizedPhotoPath = await resizeImage(photoPath);
+    const text = await performOCR(resizedPhotoPath);
+    const base64Image = await encodeImage(resizedPhotoPath);
+    const tags = await getTagsFromOpenAI(base64Image);
+
+    // Update image data with new tags and remove the needsTagging flag
+    imageData[imageName] = {
+      ...imageData[imageName],
+      text,
+      tags,
+      needsTagging: false
+    };
+
+    // Save updated data to JSON file
+    const { jsonFilePath, fs } = require('../utils/config');
+    await fs.writeJson(jsonFilePath, imageData, { spaces: 2 });
+
+    if (resizedPhotoPath !== photoPath) {
+      await fs.remove(resizedPhotoPath);
+    }
+
+    // Refresh the image data cache after updating
+    refreshImageData();
+
+    res.json({ 
+      message: 'Image successfully retagged',
+      tags: tags.tags,
+      context: tags.context
+    });
+  } catch (error) {
+    console.error('Error retagging image:', error);
+    res.status(500).json({ error: 'Failed to retag image' });
   }
 });
 

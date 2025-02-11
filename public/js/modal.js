@@ -2,7 +2,7 @@
 import { addTagAPI, updateDescriptionAPI, removeTagAPI } from './api.js';
 import { isColorDarkerThanGray, getKeyColor } from './utils.js';
 
-let modal, modalContent, modalImage, modalTags, modalDescription, addTagButton, searchBox;
+let modal, modalContent, modalImage, modalTags, modalDescription, addTagButton, searchBox, retagButton;
 
 function setupModal() {
   // Cache DOM elements for the modal and related UI controls
@@ -13,6 +13,10 @@ function setupModal() {
   modalDescription = document.getElementById('modal-description');
   addTagButton = document.getElementById('addtagbutton');
   searchBox = document.getElementById('search-box');
+  retagButton = document.getElementById('retag-button');
+
+  // Set up retag button functionality
+  retagButton.addEventListener('click', handleRetag);
 
   // Make the description editable and update on Enter (without adding a newline)
   modalDescription.setAttribute('contenteditable', 'true');
@@ -67,6 +71,49 @@ function setupModal() {
     }
   });
 }
+
+async function handleRetag() {
+  const imageName = decodeURIComponent(modalImage.style.backgroundImage.slice(5, -2)).split('/').pop();
+  retagButton.disabled = true;
+  retagButton.innerHTML = '<i data-feather="loader"></i> Generating...';
+  feather.replace();
+
+  try {
+    const response = await fetch('/api/retag-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ imageName }),
+    });
+
+    if (!response.ok) throw new Error('Failed to retag image');
+    
+    const data = await response.json();
+    
+    // Update the UI with new tags
+    modalTags.innerHTML = '';
+    data.tags.forEach(tag => {
+      const tagElement = createTagElement(imageName, tag);
+      modalTags.insertBefore(tagElement, modalTags.firstChild);
+    });
+    modalTags.appendChild(addTagButton);
+    
+    // Update description
+    modalDescription.textContent = data.context;
+    
+    // Hide retag button since image is now tagged
+    retagButton.style.display = 'none';
+  } catch (error) {
+    console.error('Error retagging image:', error);
+    alert('Failed to retag image. Please try again.');
+  } finally {
+    retagButton.disabled = false;
+    retagButton.innerHTML = '<i data-feather="refresh-cw"></i> Generate AI Tags';
+    feather.replace();
+  }
+}
+
 function openImageModal(imageUrl) {
   // Set modal image styles
   modalImage.style.backgroundImage = `url("${imageUrl}")`;
@@ -84,7 +131,7 @@ function openImageModal(imageUrl) {
   // Decode image name from URL
   const imageName = decodeURIComponent(imageUrl).split('/').pop();
 
-  // Fetch image info from the backend (note: the original endpoint was /image-info)
+  // Fetch image info from the backend
   fetch(`/api/image-info?imageName=${encodeURIComponent(imageName)}`)
     .then(response => {
       if (!response.ok) throw new Error('Image not found');
@@ -101,9 +148,11 @@ function openImageModal(imageUrl) {
           const tagElement = createTagElement(imageName, tag);
           modalTags.insertBefore(tagElement, modalTags.firstChild);
         });
-      } else {
-        modalTags.textContent = 'No tags available';
       }
+      
+      // Show/hide retag button based on needsTagging flag
+      retagButton.style.display = data.needsTagging ? 'flex' : 'none';
+      
       modal.classList.remove('modal-hide');
     })
     .catch(error => {

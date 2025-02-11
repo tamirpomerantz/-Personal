@@ -1,161 +1,98 @@
 // public/js/events.js
-import { loadImages, setCurrentPage } from './gallery.js';
-import { getTagsAPI } from './api.js';
+import { loadImages } from './gallery.js';
 
-function setupEvents() {
+export function setupEvents() {
   const searchBox = document.getElementById('search-box');
   const clearButton = document.querySelector('.button-clear');
-  const tagsWrap = document.querySelector('.search-results-container');
+  const searchResultsContainer = document.querySelector('.search-results-container');
+  const searchTagsContainer = document.querySelector('.search-tags-container');
 
-  clearButton.classList.add('button-clear--hidden'); // Hide clear button by default
-  tagsWrap.classList.add('container-hide'); // Add "container-hide" class to hide tags container by default
+  let debounceTimeout;
+
+  clearButton.classList.add('button-clear--hidden');
+  searchResultsContainer.classList.add('container-hide');
 
   searchBox.addEventListener('focus', function () {
     if (searchBox.value.trim() !== '') {
-      console.log('add')
       clearButton.classList.remove('button-clear--hidden');
-      tagsWrap.classList.remove('container-hide'); // Add "container-hide" class to hide tags container by default
-   
+      searchResultsContainer.classList.remove('container-hide');
     } else {
-      console.log('remove')
       clearButton.classList.add('button-clear--hidden');
-      tagsWrap.classList.add('container-hide'); // Add "container-hide" class to hide tags container by default
-
+      searchResultsContainer.classList.add('container-hide');
     }
   });
 
   searchBox.addEventListener('blur', function(event) {
-    // Small delay to allow for tag clicks to register
     setTimeout(() => {
-      if (!tagsWrap.contains(document.activeElement)) {
-        tagsWrap.classList.add('container-hide');
+      if (!searchResultsContainer.contains(document.activeElement)) {
+        searchResultsContainer.classList.add('container-hide');
       }
     }, 200);
   });
   
-  // Show or hide the clear button based on input value
-  searchBox.addEventListener('input', async function () {
-    if (searchBox.value.trim() !== '') {
-      clearButton.classList.remove('button-clear--hidden');
-      tagsWrap.classList.remove('container-hide'); // Add "container-hide" class to hide tags container by default
+  searchBox.addEventListener('input', async (e) => {
+    const query = e.target.value.trim();
+    clearButton.classList.toggle('button-clear--hidden', !query);
+    searchResultsContainer.classList.toggle('container-hide', !query);
 
-    } else {
-      clearButton.classList.add('button-clear--hidden');
-      tagsWrap.classList.add('container-hide'); // Add "container-hide" class to hide tags container by default
-
-    }
-    const keyword = searchBox.value.trim();
-    if (keyword) {
-      try {
-        const tags = await getTagsAPI(keyword);
-        const tagsContainer = document.querySelector('.search-tags-container');
-        tagsContainer.innerHTML = ''; // Clear existing tags
-        const sortedTags = tags.sort((a, b) => b.count - a.count);
-        sortedTags.forEach(tagObj => {
-          const tagElement = document.createElement('span');
-          tagElement.className = 'search-tag';
-
-          const tagNameElement = document.createElement('span');
-          tagNameElement.className = 'search-tag-name';
-          tagNameElement.textContent = tagObj.tag;
-
-          const tagNumberElement = document.createElement('span');
-          tagNumberElement.className = 'search-tag-number';
-          tagNumberElement.textContent = `${tagObj.count}`;
-
-          tagElement.appendChild(tagNameElement);
-          tagElement.appendChild(tagNumberElement);
-          tagsContainer.appendChild(tagElement);
-
-          // Add click event listener to trigger search and populate input field
-          tagElement.addEventListener('click', () => {
-            searchBox.value = tagObj.tag;
-            tagsWrap.classList.add('container-hide'); // Add "container-hide" class to hide tags container by default
-            setCurrentPage(1); // Use the function to set currentPage
-            loadImages(tagObj.tag, false);
+    if (query) {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(async () => {
+        try {
+          const response = await fetch(`/api/get-tags?keyword=${encodeURIComponent(query)}`);
+          const tags = await response.json();
+          
+          searchTagsContainer.innerHTML = '';
+          
+          tags.forEach(tag => {
+            const tagElement = document.createElement('div');
+            tagElement.className = 'search-tag';
+            tagElement.innerHTML = `
+              <div class="search-tag-name">${tag.tag}</div>
+              <div class="search-tag-number">${tag.count}</div>
+            `;
+            
+            tagElement.addEventListener('click', () => {
+              searchBox.value = tag.tag;
+              loadImages(tag.tag, false, true);
+              searchResultsContainer.classList.add('container-hide');
+            });
+            
+            searchTagsContainer.appendChild(tagElement);
           });
-        });
-      } catch (error) {
-        console.error('Failed to fetch tags:', error);
-      }
-    }
-
-  });
-
-  // Clear the search box when the clear button is clicked
-  clearButton.addEventListener('click', function () {
-   searchBox.value = '';
-    setCurrentPage(1); // Use the function to set currentPage
-    clearButton.classList.add('button-clear--hidden');
-    tagsWrap.classList.add('container-hide'); // Add "container-hide" class to hide tags container by default
-    loadImages("", false);
-  });
-
-  // Random toggle button for shuffling images
-  const randomToggleButton = document.getElementById('random-toggle');
-  let FetchIsRandom = false;
-  randomToggleButton.addEventListener('click', function () {
-    FetchIsRandom = !FetchIsRandom;
-    if (FetchIsRandom) {
-      randomToggleButton.classList.add('active-toggle');
+        } catch (error) {
+          console.error('Error fetching tags:', error);
+        }
+      }, 300);
     } else {
-      randomToggleButton.classList.remove('active-toggle');
+      loadImages('', false, true);
     }
-    loadImages(searchBox.value.trim(), false, FetchIsRandom);
   });
 
-  // Window resize: re-arrange images
-  window.addEventListener('resize', function () {
-    const gallery = document.getElementById('image-gallery');
-    gallery.innerHTML = '';
-    loadImages(searchBox.value.trim(), false);
+  clearButton.addEventListener('click', () => {
+    searchBox.value = '';
+    clearButton.classList.add('button-clear--hidden');
+    searchResultsContainer.classList.add('container-hide');
+    loadImages('', false, true);
   });
 
-  // Infinite scroll: load more images when nearing the bottom
-  let lastScrollTop = 0;
-  let isScrollTriggered = false;
-  window.addEventListener('scroll', () => {
-    const currentScrollTop = window.scrollY;
-    if (currentScrollTop > lastScrollTop) {
-      if (!isScrollTriggered && (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 400) {
-        isScrollTriggered = true;
-        loadImages(searchBox.value.trim(), true).then(() => {
-          isScrollTriggered = false;
-          if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 400) {
-            window.dispatchEvent(new Event('scroll'));
-          }
-        });
-      }
-    }
-    lastScrollTop = currentScrollTop;
+  const randomToggle = document.getElementById('random-toggle');
+  randomToggle.addEventListener('click', () => {
+    randomToggle.classList.toggle('active-toggle');
+    const isRandom = randomToggle.classList.contains('active-toggle');
+    loadImages(searchBox.value.trim(), isRandom, true);
   });
 
-  // Search functionality: if the Enter key is pressed in the search box
-  window.searchImages = function (event) {
-    if (event.key === 'Enter') {
-      loadImages(event.target.value.trim(), false);
-    }
-  };
-
-  // Listen for a custom searchTag event (dispatched from the modal when a tag is clicked)
   window.addEventListener('searchTag', (e) => {
     searchBox.value = e.detail;
-    loadImages(e.detail, false);
+    loadImages(e.detail, false, true);
   });
 
+  const mainTitle = document.querySelector('.main-title');
+  mainTitle.addEventListener('animationend', function() {
+    mainTitle.classList.add('animation-complete');
+  });
 
-
-  
-        const mainTitle = document.querySelector('.main-title');
-        console.log('rempving animation')
-        mainTitle.addEventListener('animationend', function() {
-            mainTitle.classList.add('animation-complete');
-        });
-
-
-
-
-  // You can also listen for custom modal navigation events if needed.
+  // Initial load
+  loadImages('', false, true);
 }
-
-export { setupEvents };

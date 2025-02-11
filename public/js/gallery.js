@@ -1,75 +1,68 @@
 // public/js/gallery.js
-let currentPage = 1;
-let imagesData = [];            // All loaded images
-let processedImagesCount = 0;   // Count of images already arranged in the gallery
 let isFetching = false;
-let FetchIsRandom = false;      // Determines whether to randomize results
-
+let hasMoreImages = true;
+let currentSearch = '';
+let currentShuffle = false;
 const gallery = document.getElementById('image-gallery');
-const SCROLL_BOUND_TRIGGER = 400;
 const gap = 16; // Gap in pixels between images
 
+export const loadImages = async (search = '', shuffle = false, isNewSearch = false) => {
+  // Don't fetch if already fetching
+  if (isFetching) return;
 
-function loadImages(search, append = false, isRandom = FetchIsRandom) {
-  const fetchingStatusDiv = document.getElementById('fetching-status');
-  const endOfResultsStatusDiv = document.getElementById('end-of-results-status');
-
-  if (isFetching) {
-    console.log('isFetching');
-    return Promise.resolve();
+  // If it's a new search, reset everything
+  if (isNewSearch) {
+    gallery.innerHTML = '';
+    hasMoreImages = true;
+    currentSearch = search;
+    currentShuffle = shuffle;
   }
 
-  fetchingStatusDiv.style.display = 'block';
-  setTimeout(() => { fetchingStatusDiv.style.display = 'none'; }, 1000);
+  // Don't fetch if we know there are no more images
+  if (!hasMoreImages) return;
+
   isFetching = true;
-  console.log(`firing loadImages page ${currentPage} q=${search} shuffle=${isRandom}`);
+  showFetchingStatus();
 
-  return fetch(`/api/images?page=${currentPage}&search=${search}&shuffle=${isRandom}`)
-    .then(response => response.json())
-    .then(data => {
-      console.log(data);
-      if (data.length > 0) {
-        if (!append) {
-          // New search: reset gallery and counters.
-          currentPage = 1;
-          gallery.innerHTML = '';
-          imagesData = [];
-          processedImagesCount = 0;
-        }
-        imagesData = imagesData.concat(data);
-        arrangeImages(imagesData.slice(processedImagesCount));
-        processedImagesCount += data.length;
-        currentPage++;
-      } else {
-        // No results found.
-        if (!append) {
-          currentPage = 1;
-          gallery.innerHTML = '';
-          imagesData = [];
-          processedImagesCount = 0;
-          console.log('no results!');
-        } else {
-          console.log('end of results');
-        }
-        endOfResultsStatusDiv.style.display = 'block';
-        setTimeout(() => { endOfResultsStatusDiv.style.display = 'none'; }, 1000);
+  try {
+    // Get the current number of images to use as offset
+    const offset = gallery.querySelectorAll('div[style]').length;
+    const response = await fetch(`/api/images?offset=${offset}&search=${encodeURIComponent(search)}&shuffle=${shuffle}`);
+    const data = await response.json();
+
+    if (!data.images || data.images.length === 0) {
+      hasMoreImages = false;
+      if (offset === 0) {
+        gallery.innerHTML = '<div class="no-results">No images found</div>';
       }
-      setTimeout(() => {
-        isFetching = false;
-      }, 1000);
-    })
-    .catch(error => {
-      console.error('Error fetching images:', error);
-      isFetching = false;
-    });
-}
+      showEndOfResultsStatus();
+      return;
+    }
 
-function arrangeImages(newImages) {
+    // Update hasMoreImages based on server response
+    hasMoreImages = data.hasMore;
+
+    // Append new images to gallery
+    arrangeImages(data.images);
+
+    // If no more images, show end of results
+    if (!hasMoreImages) {
+      showEndOfResultsStatus();
+    }
+  } catch (error) {
+    console.error('Error loading images:', error);
+  } finally {
+    isFetching = false;
+    hideFetchingStatus();
+  }
+};
+
+function arrangeImages(images) {
   const galleryWidth = gallery.clientWidth;
   let currentRow = [];
   let accumulatedAspectRatio = 0;
 
-  newImages.forEach(image => {
+  images.forEach(image => {
     const aspectRatio = image.width / image.height;
     // Decide when to start a new row
     if ((aspectRatio > 2 && currentRow.length) ||
@@ -81,25 +74,11 @@ function arrangeImages(newImages) {
     currentRow.push({ ...image, aspectRatio: aspectRatio });
     accumulatedAspectRatio += aspectRatio;
   });
+
   if (currentRow.length > 0) {
     placeRow(currentRow, galleryWidth, gap);
   }
   initializeImagesInView();
-
-  // Attach click events to each image in the gallery.
-  gallery.querySelectorAll('div[style]').forEach(imgDiv => {
-    imgDiv.addEventListener('click', function () {
-      const imageUrl = this.style.backgroundImage.slice(5, -2); // Extract URL from style
-      // Dispatch a custom event to open the modal.
-      const event = new CustomEvent('openModal', { detail: imageUrl });
-      window.dispatchEvent(event);
-    });
-  });
-}
-
-
-function setCurrentPage(page) {
-  currentPage = page;
 }
 
 function placeRow(row, totalWidth, gap) {
@@ -113,31 +92,77 @@ function placeRow(row, totalWidth, gap) {
   row.forEach((img, index) => {
     const imgWidth = (img.aspectRatio / totalAspect) * widthAvailableForImages;
     const imgElement = document.createElement('div');
-    // Add a random hover effect class
-    const randomClass = `hover-int-${Math.floor(Math.random() * 4) + 1}`;
-    imgElement.classList.add(randomClass);
+    imgElement.className = `hover-int-${(index % 4) + 1}`;
     imgElement.style.backgroundImage = `url("${img.src}")`;
     imgElement.style.width = `${imgWidth}px`;
     imgElement.style.height = `${rowHeight}px`;
     imgElement.style.backgroundSize = 'cover';
-    imgElement.style.display = 'inline-block';
-    imgElement.style.verticalAlign = 'bottom';
     if (index < row.length - 1) {
       imgElement.style.marginRight = `${gap}px`;
     }
+
+    imgElement.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('openModal', { detail: img.src }));
+    });
+
     rowElement.appendChild(imgElement);
   });
   gallery.appendChild(rowElement);
 }
 
 function initializeImagesInView() {
-  // Gather all image URLs from the gallery (for modal navigation, if needed)
   const imagesInView = Array.from(gallery.querySelectorAll('div[style]')).map(imgDiv =>
     imgDiv.style.backgroundImage.slice(5, -2)
   );
-  // Dispatch a custom event so other modules (e.g. modal navigation) can use this array.
   window.dispatchEvent(new CustomEvent('imagesInView', { detail: imagesInView }));
 }
 
-export { loadImages, arrangeImages, setCurrentPage };
+// Scroll handler with debounce
+let scrollTimeout;
+window.addEventListener('scroll', () => {
+  clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const bodyHeight = document.body.offsetHeight;
+    const scrollThreshold = bodyHeight - (window.innerHeight * 2); // Load more when 2 viewport heights away from bottom
+
+    if (scrollPosition >= scrollThreshold && !isFetching && hasMoreImages) {
+      loadImages(currentSearch, currentShuffle, false);
+    }
+  }, 100);
+});
+
+// Resize handler
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    if (gallery && gallery.children.length > 0) {
+      const existingImages = Array.from(gallery.querySelectorAll('div[style]')).map(imgDiv => {
+        const url = imgDiv.style.backgroundImage.slice(5, -2);
+        const width = parseFloat(imgDiv.style.width);
+        const height = parseFloat(imgDiv.style.height);
+        return { src: url, width, height, aspectRatio: width / height };
+      });
+      gallery.innerHTML = '';
+      arrangeImages(existingImages);
+    }
+  }, 250);
+});
+
+function showFetchingStatus() {
+  const status = document.getElementById('fetching-status');
+  status.style.display = 'block';
+  setTimeout(() => { status.style.display = 'none'; }, 1000);
+}
+
+function showEndOfResultsStatus() {
+  const status = document.getElementById('end-of-results-status');
+  status.style.display = 'block';
+  setTimeout(() => { status.style.display = 'none'; }, 1000);
+}
+
+function hideFetchingStatus() {
+  document.getElementById('fetching-status').style.display = 'none';
+}
 
