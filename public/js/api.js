@@ -29,3 +29,14 @@ export function addTagAPI(imageName, tag) {
       return response.json();
     });
   }
+
+
+export function getTagsAPI(keyword) {
+  return fetch(`/api/get-tags?keyword=${encodeURIComponent(keyword)}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  }).then(response => {
+    if (!response.ok) throw new Error('Failed to fetch tags');
+    return response.json();
+  });
+}

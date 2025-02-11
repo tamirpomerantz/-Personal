@@ -1,24 +1,84 @@
 // public/js/events.js
-import { loadImages } from './gallery.js';
+import { loadImages, setCurrentPage } from './gallery.js';
+import { getTagsAPI } from './api.js';
 
 function setupEvents() {
   const searchBox = document.getElementById('search-box');
   const clearButton = document.querySelector('.button-clear');
+  const tagsWrap = document.querySelector('.search-results-container');
+
   clearButton.classList.add('button-clear--hidden'); // Hide clear button by default
+  tagsWrap.classList.add('container-hide'); // Add "container-hide" class to hide tags container by default
+
+  searchBox.addEventListener('focus', function () {
+    if (searchBox.value.trim() !== '') {
+      console.log('add')
+      clearButton.classList.remove('button-clear--hidden');
+      tagsWrap.classList.remove('container-hide'); // Add "container-hide" class to hide tags container by default
+   
+    } else {
+      console.log('remove')
+      clearButton.classList.add('button-clear--hidden');
+      tagsWrap.classList.add('container-hide'); // Add "container-hide" class to hide tags container by default
+
+    }
+  });
 
   // Show or hide the clear button based on input value
-  searchBox.addEventListener('input', function () {
+  searchBox.addEventListener('input', async function () {
     if (searchBox.value.trim() !== '') {
       clearButton.classList.remove('button-clear--hidden');
+      tagsWrap.classList.remove('container-hide'); // Add "container-hide" class to hide tags container by default
+
     } else {
       clearButton.classList.add('button-clear--hidden');
+      tagsWrap.classList.add('container-hide'); // Add "container-hide" class to hide tags container by default
+
     }
+    const keyword = searchBox.value.trim();
+    if (keyword) {
+      try {
+        const tags = await getTagsAPI(keyword);
+        const tagsContainer = document.querySelector('.search-tags-container');
+        tagsContainer.innerHTML = ''; // Clear existing tags
+        const sortedTags = tags.sort((a, b) => b.count - a.count);
+        sortedTags.forEach(tagObj => {
+          const tagElement = document.createElement('span');
+          tagElement.className = 'search-tag';
+
+          const tagNameElement = document.createElement('span');
+          tagNameElement.className = 'search-tag-name';
+          tagNameElement.textContent = tagObj.tag;
+
+          const tagNumberElement = document.createElement('span');
+          tagNumberElement.className = 'search-tag-number';
+          tagNumberElement.textContent = `${tagObj.count}`;
+
+          tagElement.appendChild(tagNameElement);
+          tagElement.appendChild(tagNumberElement);
+          tagsContainer.appendChild(tagElement);
+
+          // Add click event listener to trigger search and populate input field
+          tagElement.addEventListener('click', () => {
+            searchBox.value = tagObj.tag;
+            tagsWrap.classList.add('container-hide'); // Add "container-hide" class to hide tags container by default
+            setCurrentPage(1); // Use the function to set currentPage
+            loadImages(tagObj.tag, false);
+          });
+        });
+      } catch (error) {
+        console.error('Failed to fetch tags:', error);
+      }
+    }
+
   });
 
   // Clear the search box when the clear button is clicked
   clearButton.addEventListener('click', function () {
-    searchBox.value = '';
+   searchBox.value = '';
+    setCurrentPage(1); // Use the function to set currentPage
     clearButton.classList.add('button-clear--hidden');
+    tagsWrap.classList.add('container-hide'); // Add "container-hide" class to hide tags container by default
     loadImages("", false);
   });
 
@@ -90,9 +150,3 @@ function setupEvents() {
 }
 
 export { setupEvents };
-
-// (Optionally, you can export an initializeImagesInView helper if needed.)
-function initializeImagesInView() {
-  // (This function can be empty if its functionality is handled in gallery.js.)
-}
-export { initializeImagesInView };

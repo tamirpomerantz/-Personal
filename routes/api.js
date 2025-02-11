@@ -74,20 +74,19 @@ router.get('/filter', (req, res) => {
 });
 
 // Route for autocomplete suggestions
-router.get('/autocomplete', (req, res) => {
+router.get('/get-tags', (req, res) => {
   const keyword = req.query.keyword.toLowerCase();
   const tagCounts = {};
 
   Object.values(imageData).forEach(data => {
       if (Array.isArray(data.tags.tags)) {
           data.tags.tags.forEach(tag => {
-              if (typeof tag === 'string' && tag.trim() !== '') {
-                  if (tag.toLowerCase().includes(keyword)) {
-                      if (!tagCounts[tag]) {
-                          tagCounts[tag] = 0;
-                      }
-                      tagCounts[tag]++;
+              const lowerCaseTag = tag.toLowerCase(); // Convert tag to lowercase
+              if (lowerCaseTag.includes(keyword)) {
+                  if (!tagCounts[lowerCaseTag]) {
+                      tagCounts[lowerCaseTag] = 0;
                   }
+                  tagCounts[lowerCaseTag]++;
               }
           });
       }
@@ -95,6 +94,7 @@ router.get('/autocomplete', (req, res) => {
   const result = Object.entries(tagCounts).map(([tag, count]) => ({ tag, count }));
   res.json(result);
 });
+
 
 // Route for searching images
 router.get('/search', (req, res) => {

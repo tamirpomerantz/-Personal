@@ -9,6 +9,7 @@ const gallery = document.getElementById('image-gallery');
 const SCROLL_BOUND_TRIGGER = 400;
 const gap = 16; // Gap in pixels between images
 
+
 function loadImages(search, append = false, isRandom = FetchIsRandom) {
   const fetchingStatusDiv = document.getElementById('fetching-status');
   const endOfResultsStatusDiv = document.getElementById('end-of-results-status');
@@ -96,6 +97,11 @@ function arrangeImages(newImages) {
   });
 }
 
+
+function setCurrentPage(page) {
+  currentPage = page;
+}
+
 function placeRow(row, totalWidth, gap) {
   const rowElement = document.createElement('div');
   rowElement.className = 'row';
@@ -133,10 +139,5 @@ function initializeImagesInView() {
   window.dispatchEvent(new CustomEvent('imagesInView', { detail: imagesInView }));
 }
 
-export { loadImages, arrangeImages };
+export { loadImages, arrangeImages, setCurrentPage };
 
-// (If needed, you could also export a setup function, but in this example gallery.js is used by events.js.)
-function setupGallery() {
-  // Currently, nothing extra is needed here.
-}
-export { setupGallery };

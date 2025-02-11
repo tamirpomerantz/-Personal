@@ -43,22 +43,37 @@ const updateJSONFile = async () => {
     console.error('Error processing images:', err);
   }
 };
-
 const watchPhotosDirectory = () => {
   const chokidar = require('chokidar');
   let isUpdating = false;
+  let initialRun = true; // Flag to track the initial run
+
   const watcher = chokidar.watch(photosDir, {
     ignored: /(^|[\/\\])\../,
     persistent: true,
     depth: 0,
     awaitWriteFinish: {
       stabilityThreshold: 2000,
-      pollInterval: 100
+      pollInterval: 1000
     }
   });
+
+  // Run updateJSONFile once at startup
+  watcher.on('ready', async () => {
+    if (!isUpdating) {
+      isUpdating = true;
+      try {
+        await updateJSONFile();
+      } finally {
+        isUpdating = false;
+        initialRun = false; // Set initialRun to false after the first update
+      }
+    }
+  });
+
   watcher.on('add', async (pathAdded) => {
-    if (/\.(png|webm|jpg)$/i.test(pathAdded)) {
-      console.log(`File ${pathAdded} has been added`);
+    if (!initialRun && /\.(png|webm|jpg)$/i.test(pathAdded)) {
+      // console.log(`File ${pathAdded} has been added`);
       if (!isUpdating) {
         isUpdating = true;
         try {

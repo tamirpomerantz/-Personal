@@ -1,13 +1,13 @@
 // public/js/main.js
 import { setupModal, openImageModal } from './modal.js';
-import { setupGallery, loadImages } from './gallery.js';
+import { loadImages } from './gallery.js';
 import { setupEvents } from './events.js';
+
 
 // When the DOM is ready, initialize all parts
 document.addEventListener('DOMContentLoaded', function () {
   // Call each module’s setup function
   setupModal();
-  setupGallery();
   setupEvents();
 
   // Listen for a custom event (dispatched when a gallery image is clicked) to open the modal.
