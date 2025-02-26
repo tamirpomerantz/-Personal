@@ -184,7 +184,11 @@ function updateTags(tags) {
     });
 
     // Update generate tags button text
-    generateTagsButton.textContent = tags.length > 0 ? 'Retag with AI' : 'Generate Tags with AI';
+    
+    generateTagsButton.innerHTML = tags.length > 0 ? 
+        '<i data-feather="zap"></i> Retag with AI' : 
+        '<i data-feather="zap"></i> Generate Tags with AI';
+    feather.replace(); // Refresh Feather icons
 }
 
 function createTagElement(tagText) {
@@ -321,7 +325,12 @@ generateTagsButton.addEventListener('click', async () => {
         // Remove loading state
         document.body.classList.remove('loading-tags');
         generateTagsButton.classList.remove('ai-button--loading');
-        generateTagsButton.textContent = currentImage.tags?.length > 0 ? 'Retag with AI' : 'Generate Tags with AI';
+
+        generateTagsButton.innerHTML = tags?.length > 0 ? 
+        '<i data-feather="zap"></i> Retag with AI' : 
+        '<i data-feather="zap"></i> Generate Tags with AI';
+    feather.replace(); // Refresh Feather icons
+
     }
 });
 
