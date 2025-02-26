@@ -32,8 +32,8 @@ const path = require('path');
 const { ipcRenderer } = require('electron');
 const chokidar = require('chokidar');
 const EventEmitter = require('events');
-const sharp = require('sharp');
 const os = require('os');
+const Jimp = require('jimp');
 let isLoaded = false;
 
 class ImageService extends EventEmitter {
@@ -278,48 +278,44 @@ class ImageService extends EventEmitter {
     }
 
     async cropImage(imagePath, cropData) {
+        let tempPath = null;
         try {
             const { x, y, width, height, rotation } = cropData;
             const fileName = path.basename(imagePath);
             const ext = path.extname(fileName);
             // Use system temp directory and add a unique timestamp
-            const tempPath = path.join(os.tmpdir(), `ele_crop_${Date.now()}_${fileName}`);
+            tempPath = path.join(os.tmpdir(), `ele_crop_${Date.now()}_${fileName}`);
             
-            // Get image metadata first
-            const metadata = await sharp(imagePath).metadata();
+            // Load the image with Jimp
+            const image = await Jimp.read(imagePath);
             
             // Validate crop dimensions
-            const validX = Math.max(0, Math.min(x, metadata.width - 1));
-            const validY = Math.max(0, Math.min(y, metadata.height - 1));
-            const validWidth = Math.max(1, Math.min(width, metadata.width - validX));
-            const validHeight = Math.max(1, Math.min(height, metadata.height - validY));
-            
-            // Create a sharp instance for image processing
-            let sharpInstance = sharp(imagePath);
+            const validX = Math.max(0, Math.min(x, image.getWidth() - 1));
+            const validY = Math.max(0, Math.min(y, image.getHeight() - 1));
+            const validWidth = Math.max(1, Math.min(width, image.getWidth() - validX));
+            const validHeight = Math.max(1, Math.min(height, image.getHeight() - validY));
             
             // Apply rotation if needed (before crop)
             if (rotation !== 0) {
                 const normalizedRotation = ((rotation % 360) + 360) % 360;
-                sharpInstance = sharpInstance.rotate(normalizedRotation);
+                image.rotate(normalizedRotation);
             }
             
             // Apply crop with validated dimensions
-            sharpInstance = sharpInstance.extract({
-                left: Math.round(validX),
-                top: Math.round(validY),
-                width: Math.round(validWidth),
-                height: Math.round(validHeight)
-            });
+            image.crop(
+                Math.round(validX),
+                Math.round(validY),
+                Math.round(validWidth),
+                Math.round(validHeight)
+            );
             
-            // Ensure output format matches input
+            // Set quality based on format
             if (ext.toLowerCase() === '.jpg' || ext.toLowerCase() === '.jpeg') {
-                sharpInstance = sharpInstance.jpeg({ quality: 100 });
-            } else if (ext.toLowerCase() === '.png') {
-                sharpInstance = sharpInstance.png({ quality: 100 });
+                image.quality(100);
             }
             
             // Save to temporary file first
-            await sharpInstance.toFile(tempPath);
+            await image.writeAsync(tempPath);
             
             // Safely replace the original file
             await fs.promises.unlink(imagePath);
@@ -334,7 +330,7 @@ class ImageService extends EventEmitter {
             return true;
         } catch (error) {
             // Clean up temp file if it exists
-            if (fs.existsSync(tempPath)) {
+            if (tempPath && fs.existsSync(tempPath)) {
                 fs.unlinkSync(tempPath);
             }
             console.error('Error cropping image:', error);

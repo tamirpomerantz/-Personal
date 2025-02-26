@@ -51,7 +51,7 @@ The built application will be available in the `dist` directory.
 
 - Electron
 - Node.js
-- Sharp (image processing)
+- Jimp (image processing)
 - OpenAI/Anthropic API (AI features)
 - Tesseract.js (OCR capabilities)
 - Feather Icons

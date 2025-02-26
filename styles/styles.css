@@ -76,8 +76,9 @@ body::before {
     letter-spacing: -1.1px;
     position: relative;
     overflow: visible;
-    font-size: 40px;
+    font-size: var(--font-size-title);
     top: -2px;
+    z-index: 2;
     line-height: 100%;
 }
 
@@ -91,7 +92,7 @@ body::before {
     position: relative;
     pointer-events: none;
     font-size: 24px;
-    top: -6px;
+    top: -26px;
     line-height: 100%;
 }
 
@@ -108,7 +109,7 @@ body::before {
 
 #searchHint {
     position: relative;
-    top: 1px;
+    top: 16px;
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
