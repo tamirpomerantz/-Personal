@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Details</title>
+    <script src="https://unpkg.com/panzoom@9.4.0/dist/panzoom.min.js"></script>
+    <link rel="stylesheet" href="styles/m.css">
+    
+    <style>
+        body {
+            margin: 0;
+            background: conic-gradient(from 0deg at calc(100% - 450px) calc(100% - 80px), var(--color-background) 1%, var(--color-base) 100%);
+            color: white;
+            display: flex;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        body.loading-tags .modal-content{
+            background: color-mix(in srgb, var(--color-base) 80%, transparent 20%);
+        }
+
+
+
+
+
+        #imageDescription {
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-text);
+    font-weight: var(--font-light);
+    color: var(--color-text);
+}
+
+#imageTitle {
+    font-weight: var(--font-bold);
+    font-size: var(--font-size-large);
+    letter-spacing: var(--letter-spacing-tight);
+    line-height: var(--line-height-title);
+    color: var(--color-text);
+}
+
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--color-background);
+    z-index: 1000;
+    padding: 40px;
+}
+
+.modal-content {
+    width: 100%;
+    max-height: 100vh;
+    margin: 0 auto;
+    position: relative;
+    background: color-mix(in srgb, var(--color-base) 0%, transparent 100%);
+    display: flex;
+    color: var(--color-text);
+    transition: var(--transition-normal);
+    padding: 0;
+}
+
+.modal-image {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.modal-image img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.modal-details {
+    flex: 1;
+    max-width: 450px;
+    padding: var(--spacing-l);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
+    overflow-y: auto;
+    background-image: var(--color-background-alt);
+    z-index: 1;
+    border-radius: var(--radius-m);
+}
+
+.modal-details h3 {
+    margin: 0;
+    font-size: var(--font-size-large);
+    color: var(--color-text);
+    font-weight: var(--font-medium);
+}
+
+.modal-details p {
+    margin: 0;
+    font-size: var(--font-size-small);
+    line-height: var(--line-height-text);
+    color: var(--color-text-secondary);
+}
+
+
+ .zoom-controls {
+    display: none;
+}
+     
+
+        .drag-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 32px;
+            width: 100%;
+            -webkit-app-region: drag;
+            z-index: 1000;
+        }
+        .drag-bar:hover {
+            background-color: var(--color-background-alt);
+        }
+
+
+        #bottomButtonsContainer {
+            position: absolute;
+            display: flex;
+            gap: var(--spacing-s);
+            bottom: 0px;
+            left: 0px;
+            z-index: 1000;
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+            padding: var(--spacing-m);
+            transform: translateY(0%);
+            transition:var(--transition-normal);
+            mix-blend-mode: difference;
+        }
+        #bottomButtonsContainer.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(100%);
+        }
+
+        .crop-interface {
+            display: none;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, transparent 0%, var(--color-background-alt) 100%);
+            padding: var(--spacing-s);
+            z-index: 999;
+        }
+
+        .crop-interface.active {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .crop-controls {
+            display: flex;
+            gap: var(--spacing-s);
+        }
+
+        .crop-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+        }
+
+        .crop-overlay.active {
+            display: block;
+        }
+
+        .crop-area {
+            position: absolute;
+            border: 1px solid var(--color-primary);
+            cursor: move;
+            z-index: 999;
+        }
+
+        .crop-handle {
+            width: 10px;
+            height: 10px;
+            background: var(--color-primary);
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .toast {
+            position: fixed;
+            top: var(--spacing-l);
+            right: calc(450px + var(--spacing-l));
+            background-color: var(--color-background);
+            color: var(--color-text);
+            padding: var(--spacing-m) var(--spacing-l);
+            border-radius: var(--radius-m);
+            z-index: 2000;
+            opacity: 0;
+            transition: var(--transition-fast);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-100%);
+
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0%);
+        }
+
+        #generateTags {
+           background: var(--color-primary);
+           color: var(--color-text);
+           box-shadow: 0px 0px 0px 0px #006BFB;
+           width: 100%;
+        } 
+        #generateTags:hover {
+            background: var(--color-primary-hover);
+        }
+
+        #generateTags.ai-button--loading 
+        {
+    color: var(--color-text-lite);
+    background: linear-gradient(
+        80deg,
+        var(--color-background) 20%, 
+        #006BFB 25%, 
+        var(--color-primary-hover) 30%, 
+        #E9C900 35%, 
+        var(--color-background) 50%, 
+        #FA4912 68%, 
+        var(--color-primary-hover) 75%, 
+        #FD92D1 80%, 
+        var(--color-background) 100%
+    );
+    background-size: 300% 100%;
+    animation: fancyLoadingAnimation 2.5s linear infinite;
+    transition: var(--transition-fast);
+}
+
+@keyframes fancyLoadingAnimation {
+    0% {
+    background-position: 150% 100%;
+    box-shadow: 0px 0px 44px 8px #006BFB44;
+}
+
+50% {
+    background-position: 0% 50%;
+    box-shadow: 4px 4px 60px 8px #FA4912aa;
+}
+100% {
+    background-position: -150% 0%;
+    box-shadow: 0px 0px 44px 8px #006BFB44;
+}
+}
+    </style>
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+    <div class="drag-bar"></div>
+    
+    <div class="modal-content">
+        <div class="modal-image">
+            <img id="modalImage" src="" alt="">
+            <div id="bottomButtonsContainer">
+
+                <button class="color-scheme-reverse crop-button button button--secondary" id="cropButton">
+                    <i data-feather="crop"></i>
+                    Crop
+                </button>
+                <button class="color-scheme-reverse copy-button button button--secondary" id="copyButton">
+                    <i data-feather="copy"></i>
+                    Copy
+                </button>
+            </div>
+       
+            <div class="crop-interface" id="cropInterface">
+                <div class="crop-controls">
+                    <button class="color-scheme-reverse button button--secondary" id="rotateLeft">Rotate Left</button>
+                    <button class="color-scheme-reverse button button--secondary" id="rotateRight">Rotate Right</button>
+                    <button class="color-scheme-reverse button button--secondary" id="zoomInCrop">Zoom In</button>
+                    <button class="color-scheme-reverse button button--secondary" id="zoomOutCrop">Zoom Out</button>
+                </div>
+                <div class="crop-actions">
+                    <button class="color-scheme-reverse button button--secondary" id="cancelCrop">Cancel</button>
+                    <button class="color-scheme-reverse button button--primary" id="applyCrop">Apply</button>
+                </div>
+            </div>
+            <div class="crop-overlay" id="cropOverlay">
+                <div class="crop-area" id="cropArea">
+                    <div class="crop-handle" style="top: -5px; left: -5px;"></div>
+                    <div class="crop-handle" style="top: -5px; right: -5px;"></div>
+                    <div class="crop-handle" style="bottom: -5px; left: -5px;"></div>
+                    <div class="crop-handle" style="bottom: -5px; right: -5px;"></div>
+                </div>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-button" id="zoomOut">-</button>
+                <button class="zoom-button zoom-reset" id="zoomReset">Reset</button>
+                <button class="zoom-button" id="zoomIn">+</button>
+            </div>
+        </div>
+        <div class="modal-details">
+            <button class="close-button button button--secondary button--icon-only" id="closeButton">
+                <i data-feather="arrow-left"></i>
+            </button>
+            <div class="editable" contenteditable="true" id="imageTitle"></div>
+            <div class="editable" contenteditable="true" id="imageDescription"></div>
+            <div class="tag-container" id="tagContainer">
+                <input type="text" class="tag-input" placeholder="Add tag..." id="tagInput">
+            </div>
+            <button id="generateTags" class="button button--primary">Generate Tags with AI</button>
+        </div>
+    </div>
+
+    <script src="imageModal.js"></script>
+</body>
+</html> 

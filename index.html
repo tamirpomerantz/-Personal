@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com; img-src 'self' data: file:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';">
+    <title>Personal</title>
+    <link rel="stylesheet" href="styles/styles.css">
+    <link rel="stylesheet" href="styles/m.css">
+</head>
+<body>
+    <div class="header">
+        <div class="button--icon-only drag-handle button button--secondary">
+            <i data-feather="move"></i>
+        </div>
+        <div class="search-container">
+            <div contenteditable="true" type="text" id="searchInput" class="search-input" placeholder="Search Personal"></div>
+            <div id="searchHint">
+                <div class="hint-button">Esc</div> to clear
+            </div>
+            <select id="searchType" class="search-input" style="display: none;">
+                <option value="text">Text</option>
+                <option value="tags">Tags</option>
+            </select>
+           
+        </div>
+        <button id="shuffleButton" class="button--icon-only button button--secondary">
+            <i data-feather="shuffle"></i>
+        </button>
+        <button id="settingsButton" class="button--icon-only button button--secondary">
+            <i data-feather="sliders"></i>
+        </button>
+        <div class="column-control">
+            <input type="range" id="columnSlider" min="1" max="6" value="3" class="column-slider">
+        </div>
+        <button id="resizeHandle" class="button--icon-only resize-handle button button--secondary">
+            <i data-feather="arrow-left"></i>
+        </button>
+    </div>
+    <div class="no-results">
+        <div class="blurspan">N</div>
+        <div class="blurspan">o</div>
+        <div class="blurspan">_</div>
+        <div class="blurspan">i</div>
+        <div class="blurspan">m</div>
+        <div class="blurspan">a</div>
+        <div class="blurspan">g</div>
+        <div class="blurspan">e</div>
+        <div class="blurspan">s</div>
+        <div class="blurspan">_</div>
+        <div class="blurspan">f</div>
+        <div class="blurspan">o</div>
+        <div class="blurspan">u</div>
+        <div class="blurspan">n</div>
+        <div class="blurspan">d</div>
+</div>
+    <div id="imageGrid" class="grid-container"></div>
+   
+    <div id="settingsModal" class="settings-modal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2>Settings</h2>
+                <button id="closeSettings" class="settings-close button--icon-only button button--secondary">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <div class="settings-section">
+                <h3>AI Configuration</h3>
+                <select id="modelSelect" class="model-select input-l">
+                    <option value="openai">OpenAI</option>
+                    <option value="gemini">Google Gemini</option>
+                    <option value="claude">Anthropic Claude</option>
+                </select>
+                <input type="password" id="apiKeyInput" class="api-key-input input-l" placeholder="Enter API Key">
+                <h3 style="margin-top: var(--spacing-m);">Default AI Prompt</h3>
+                <textarea id="mainPromptInput" class="input-l" placeholder="Enter default AI prompt..." rows="4"></textarea>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="autoTagCheckbox" class="auto-tag-checkbox">
+                    <label for="autoTagCheckbox">Automatically tag new images</label>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h3>Theme</h3>
+                <div class="m-toggle-container">
+                    <label class="m-toggle-switch">
+                        <span class="m-toggle-label">Override System Theme</span>
+                        <input type="checkbox" id="darkModeToggle">
+                        <span class="m-toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="settings-section">
+                <h3>Data Management</h3>
+                <button id="clearStore" class="button button--secondary clear-store-button">Clear OCR & Image Data</button>
+            </div>
+            <button id="saveSettings" class="button button--primary save-settings">Save Settings</button>
+        </div>
+    </div>
+    <script src="renderer.js"></script>
+    <script>
+        // Initialize Feather Icons after the DOM is loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.feather) {
+                window.feather.replace();
+                console.log('Feather Icons loaded');
+            }
+        });
+    </script>
+</body>
+</html> 
+   
