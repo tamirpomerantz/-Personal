@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 const chokidar = require('chokidar');
@@ -92,7 +91,12 @@ class DataService {
         try {
             this.ensureDataFile();
             const data = JSON.parse(fs.readFileSync(this.dataFile, 'utf8'));
-            this.imageData = new Map(Object.entries(data));
+            
+            // Convert to array, sort by date, then create Map
+            const sortedEntries = Object.entries(data)
+                .sort(([, a], [, b]) => new Date(b.date) - new Date(a.date));
+            this.imageData = new Map(sortedEntries);
+            
             console.log(`📚 Loaded data for ${this.imageData.size} images`);
         } catch (error) {
             console.error('❌ Error loading image data:', error);

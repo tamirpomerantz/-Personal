@@ -168,7 +168,9 @@ class ImageService extends EventEmitter {
                     mtime: stats.mtime,
                     birthtime: stats.birthtime
                 };
-            });
+            })
+            .sort((a, b) => b.mtime - a.mtime);
+            
         
         console.log(`📊 Found ${files.length} image files`);
 

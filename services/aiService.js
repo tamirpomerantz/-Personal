@@ -41,7 +41,7 @@ class AIService {
         this.dataService = dataService;
         this.client = null;
         this.fileManager = null;
-        this.rateLimiter = new RateLimiter(20, 60000); // 5 requests per minute
+        this.rateLimiter = new RateLimiter(100, 60000); // 5 requests per minute
         this.defaultPrompt = `You are a designer trying to create a library of references.
 you see an image of a graphic design object - an interface , poster, book, typography or object.
 try to describe the different elements in the photo in a detailed way so you can search it later. identify logos, brands and graphic concepts and elements.
