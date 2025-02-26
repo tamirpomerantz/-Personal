@@ -1,3 +1,6 @@
+![Main gallery view with masonry layout](screenshot1.gif)
+
+
 # Personal
 
 A powerful desktop application built with Electron for managing and organizing references and photo collection folder with AI-powered features.
@@ -7,10 +10,6 @@ A powerful desktop application built with Electron for managing and organizing r
 - 🖼️ **Modern Gallery Interface**: Masonry-style layout for elegant photo display
 - 🤖 **AI-Powered Tagging**: Automatically generate tags and descriptions for your photos
 - 📝 **OCR**: Automatically generate search metadata for your photos using OCR
-
-## Screenshots
-
-![Main gallery view with masonry layout](screenshot1.gif)
 
 ![AI Tagging](screenshot2.gif)
 
