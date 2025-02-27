@@ -33,6 +33,7 @@ class SearchService {
         this.imagesPerPage = imagesPerPage;
         this.currentQuery = '';
         this.currentSearchType = 'all'; // 'all', 'ocr', 'tags', 'title'
+        this.sortMode = 'normal'; // 'normal', 'firstToLast', 'lastToFirst'
     }
 
     setSearchQuery(query, searchType = 'all') {
@@ -149,13 +150,46 @@ class SearchService {
         this.currentPage = 0;
     }
 
+    sortFirstToLast(images) {
+        return [...images];  // Returns array in original order
+    }
+
+    sortLastToFirst(images) {
+        return [...images].reverse();  // Returns array in reverse order
+    }
+
     shuffleImages(images) {
-        const shuffled = [...images];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        console.log('Shuffling images:', this.sortMode);
+        switch (this.sortMode) {
+            case 'firstToLast':
+                return this.sortFirstToLast(images);
+            case 'lastToFirst':
+                return this.sortLastToFirst(images);
+            case 'normal':
+            default:
+                const shuffled = [...images];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
         }
-        return shuffled;
+    }
+
+    // Add method to cycle through sort modes
+    cycleSortMode() {
+        switch (this.sortMode) {
+            case 'normal':
+                this.sortMode = 'firstToLast';
+                break;
+            case 'firstToLast':
+                this.sortMode = 'lastToFirst';
+                break;
+            case 'lastToFirst':
+                this.sortMode = 'normal';
+                break;
+        }
+        return this.sortMode;
     }
 }
 

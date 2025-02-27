@@ -79,14 +79,6 @@ class SettingsService {
     }
 
 
-    getThemeSettings() {
-        return this.dataService.getSettings('theme') || { isDarkMode: false };
-    }
-
-    setThemeSettings(settings) {
-        return this.dataService.setSettings('theme', settings);
-    }
-
     // Search Settings
     getSearchSettings() {
         const settings = this.dataService.getSettings();

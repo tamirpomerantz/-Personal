@@ -68,36 +68,6 @@ const darkModeToggle = document.getElementById('darkModeToggle');
 const searchHint = document.getElementById('searchHint');
 searchHint.classList.add('hidden');
 
-// Initialize resize handle functionality
-const resizeHandle = document.getElementById('resizeHandle');
-let isResizing = false;
-let initialWidth;
-let initialX;
-
-resizeHandle.addEventListener('mousedown', (e) => {
-    isResizing = true;
-    initialWidth = window.innerWidth;
-    initialX = e.clientX;
-    document.body.style.cursor = 'ew-resize';
-});
-
-document.addEventListener('mousemove', (e) => {
-    if (!isResizing) return;
-    
-    const deltaX = initialX - e.clientX;
-    const newWidth = initialWidth - deltaX;
-    
-    // Minimum width to prevent window from becoming too small
-    if (newWidth >= 600) {
-        ipcRenderer.send('resize-window', { width: newWidth });
-    }
-});
-
-document.addEventListener('mouseup', () => {
-    isResizing = false;
-    document.body.style.cursor = 'default';
-});
-
 
 // Add ESC key handler to clear input or close window
 document.addEventListener('keydown', (event) => {
@@ -287,7 +257,6 @@ function closeSettings() {
 // Load settings
 function loadSettings() {
     const aiSettings = settingsService.getAISettings() || { model: 'openai', apiKey: '', autoTag: false, mainPrompt: '' };
-    const themeSettings = settingsService.getThemeSettings() || { isDarkMode: false };
 
     if (modelSelect && apiKeyInput && autoTagCheckbox && mainPromptInput) {
         modelSelect.value = aiSettings.model || 'openai';
@@ -296,9 +265,9 @@ function loadSettings() {
         mainPromptInput.value = aiSettings.mainPrompt || '';
     }
 
-    if (darkModeToggle) {
-        darkModeToggle.checked = themeSettings.isDarkMode;
-    }
+    // if (darkModeToggle) {
+    //     darkModeToggle.checked = themeSettings.isDarkMode;
+    // }
 }
 
 // Save settings
@@ -310,14 +279,14 @@ function saveSettings() {
             autoTag: autoTagCheckbox.checked || false,
             mainPrompt: mainPromptInput.value || ''
         };
-        const themeSettings = {
-            isDarkMode: darkModeToggle.checked
-        };
-        settingsService.setThemeSettings(themeSettings);
+        // const themeSettings = {
+        //     isDarkMode: darkModeToggle.checked
+        // };
+        // settingsService.setThemeSettings(themeSettings);
         settingsService.setAISettings(settings);
         aiService.setModel(settings.model, settings.apiKey);
         aiService.setMainPrompt(settings.mainPrompt);
-        ipcRenderer.send('update-theme', themeSettings.isDarkMode);
+        // ipcRenderer.send('update-theme', themeSettings.isDarkMode);
         closeSettings();
     }
 }
@@ -339,8 +308,26 @@ searchTypeSelect.addEventListener('change', () => {
 });
 
 shuffleButton.addEventListener('click', () => {
-    const shuffledImages = searchService.shuffleImages(domManager.visibleImages);
-    domManager.visibleImages = shuffledImages;
+    const newMode = searchService.cycleSortMode();
+    
+    // Update button icon and tooltip based on mode
+    switch (newMode) {
+        case 'firstToLast':
+            shuffleButton.innerHTML = feather.icons['arrow-down'].toSvg();
+            shuffleButton.title = 'First to Last';
+            break;
+        case 'lastToFirst':
+            shuffleButton.innerHTML = feather.icons['arrow-up'].toSvg();
+            shuffleButton.title = 'Last to First';
+            break;
+        case 'normal':
+            shuffleButton.innerHTML = feather.icons['shuffle'].toSvg();
+            shuffleButton.title = 'Shuffle';
+            break;
+    }
+
+    const sortedImages = searchService.shuffleImages(domManager.allImages);
+    domManager.visibleImages = sortedImages;
     domManager.displayImages(true);
 });
 
