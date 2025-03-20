@@ -100,7 +100,7 @@ ipcMain.on('image-updated', (event, updatedImage) => {
 
 // Create Main Window
 function createWindow() {
-    if (mainWindow) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.show();
         return;
     }
@@ -126,6 +126,10 @@ function createWindow() {
         console.log('Window loaded successfully');
     });
 
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+    });
+
     ipcMain.on('resize-window', (event, { width }) => {
         const currentSize = mainWindow.getSize();
         mainWindow.setSize(width, currentSize[1]);
@@ -138,23 +142,27 @@ app.whenReady().then(() => {
 
     createWindow();
 
-    // Register global shortcut
-    globalShortcut.register('Shift+Space', () => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-            if (mainWindow.isVisible()) {
-                mainWindow.hide();
-            } else {
-                mainWindow.show();
-                mainWindow.focus();
-            }
-        } else {
-            mainWindow = null;
-            createWindow();
-        }
-    });
+    // // Register global shortcut
+    // globalShortcut.register('Shift+Space', () => {
+    //     if (mainWindow && !mainWindow.isDestroyed()) {
+    //         if (mainWindow.isVisible()) {
+    //             mainWindow.hide();
+    //         } else {
+    //             mainWindow.show();
+    //             mainWindow.focus();
+    //         }
+    //     } else {
+    //         mainWindow = null;
+    //         createWindow();
+    //     }
+    // });
 
     app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow();
+        if (!mainWindow || mainWindow.isDestroyed()) {
+            createWindow();
+        } else {
+            mainWindow.show();
+        }
     });
 });
 
