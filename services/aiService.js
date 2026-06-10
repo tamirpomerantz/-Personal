@@ -9,7 +9,7 @@ const fs = require('fs');
 const http = require('http');
 const os = require('os');
 const { v4: uuidv4 } = require('uuid');
-const geminiModel = "gemini-2.0-flash-lite";
+const geminiModel = "gemini-flash-lite-latest";
 
 class RateLimiter {
     constructor(maxRequests, timeWindow) {
