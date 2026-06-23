@@ -208,11 +208,10 @@ async function loadMoreImages() {
 }
 
 // Image modal
-async function showImageModal(image) {
+function showImageModal(image) {
     try {
-        // Get fresh data before opening modal
         const freshData = dataService.getImageData(image.name);
-        await ipcRenderer.invoke('open-image-modal', freshData || image);
+        ipcRenderer.invoke('open-image-modal', freshData || image);
     } catch (error) {
         console.error('Error opening image modal:', error);
     }

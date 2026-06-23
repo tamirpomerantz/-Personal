@@ -14,6 +14,7 @@ if (!fs.existsSync(personalPath)) {
 }
 
 let mainWindow = null;
+let modalWindow = null;
 
 // OCR Queue Management
 const MAX_CONCURRENT_OCR = 20;
@@ -63,12 +64,11 @@ ipcMain.on('update-theme', (event, isDarkMode) => {
 });
 
 
-// Handle image modal window creation
-ipcMain.handle('open-image-modal', (event, imageData) => {
+function createModalWindow() {
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width: screenWidth } = primaryDisplay.workAreaSize;
 
-    const modalWindow = new BrowserWindow({
+    const win = new BrowserWindow({
         width: Math.round(screenWidth * 0.8),
         height: 800,
         parent: mainWindow,
@@ -83,14 +83,56 @@ ipcMain.handle('open-image-modal', (event, imageData) => {
         }
     });
 
-    modalWindow.loadFile('imageModal.html');
+    win.loadFile('imageModal.html');
 
-    modalWindow.once('ready-to-show', () => {
-        modalWindow.show();
-        modalWindow.webContents.send('image-data', imageData);
+    win.on('closed', () => {
+        modalWindow = null;
     });
 
-    return modalWindow.id;
+    return win;
+}
+
+function getOrCreateModalWindow() {
+    if (!modalWindow || modalWindow.isDestroyed()) {
+        modalWindow = createModalWindow();
+    }
+    return modalWindow;
+}
+
+function prewarmModalWindow() {
+    getOrCreateModalWindow();
+}
+
+function sendImageDataToModal(win, imageData) {
+    const sendData = () => {
+        if (!win.isDestroyed()) {
+            win.webContents.send('image-data', imageData);
+        }
+    };
+
+    if (win.webContents.isLoadingMainFrame()) {
+        win.webContents.once('did-finish-load', sendData);
+    } else {
+        sendData();
+    }
+}
+
+// Handle image modal window creation
+ipcMain.handle('open-image-modal', (event, imageData) => {
+    const win = getOrCreateModalWindow();
+
+    win.show();
+    win.focus();
+    win.webContents.send('modal-open');
+    sendImageDataToModal(win, imageData);
+
+    return win.id;
+});
+
+ipcMain.on('hide-image-modal', () => {
+    if (modalWindow && !modalWindow.isDestroyed()) {
+        modalWindow.hide();
+    }
 });
 
 // Relay image updates from modal to main window
@@ -124,6 +166,7 @@ function createWindow() {
 
     mainWindow.webContents.on('did-finish-load', () => {
         console.log('Window loaded successfully');
+        prewarmModalWindow();
     });
 
     mainWindow.on('closed', () => {

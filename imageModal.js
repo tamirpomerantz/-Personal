@@ -37,6 +37,7 @@ const zoomOutButton = document.getElementById('zoomOut');
 const zoomResetButton = document.getElementById('zoomReset');
 const copyButton = document.getElementById('copyButton');
 const bottomButtonsContainer = document.getElementById('bottomButtonsContainer');
+const imageLoadingOverlay = document.getElementById('imageLoadingOverlay');
 
 // Additional DOM Elements for cropping
 const cropButton = document.getElementById('cropButton');
@@ -132,7 +133,7 @@ function initializePanzoom() {
                 resetZoom();
             }
         } else if (e.key === 'Escape') {
-            window.close();
+            ipcRenderer.send('hide-image-modal');
         }
     });
 }
@@ -144,32 +145,64 @@ function resetZoom() {
     }
 }
 
+function showImageLoadingState() {
+    document.body.classList.add('loading-image');
+    imageLoadingOverlay.classList.remove('hidden');
+    bottomButtonsContainer.classList.add('hidden');
+
+    if (panzoomInstance) {
+        panzoomInstance.dispose();
+        panzoomInstance = null;
+    }
+}
+
+function hideImageLoadingState() {
+    document.body.classList.remove('loading-image');
+    imageLoadingOverlay.classList.add('hidden');
+    bottomButtonsContainer.classList.remove('hidden');
+}
+
+function finishImageLoad() {
+    hideImageLoadingState();
+    initializePanzoom();
+}
+
 // Receive image data from main process
-ipcRenderer.on('image-data', async (event, imageData) => {
-    // Get fresh data from DataService
+ipcRenderer.on('modal-open', () => {
+    showImageLoadingState();
+});
+
+ipcRenderer.on('image-data', (event, imageData) => {
     const freshData = dataService.getImageData(imageData.name);
-    currentImage = freshData || imageData; // Fallback to passed data if not found
+    currentImage = freshData || imageData;
     updateModalContent(currentImage);
 });
 
 function updateModalContent(image) {
-    // Get fresh data again in case it was updated
+    showImageLoadingState();
+
     const freshData = dataService.getImageData(image.name);
     if (freshData) {
         image = freshData;
         currentImage = freshData;
     }
-    
-    modalImage.src = image.fileUrl;
-    modalImage.alt = image.title || '';
+
     imageTitle.textContent = image.title || 'Untitled';
     imageDescription.textContent = image.description || 'No description available.';
     updateTags(image.tags || []);
+    modalImage.alt = image.title || '';
 
-    // Initialize panzoom after image is loaded
-    modalImage.onload = () => {
-        initializePanzoom();
+    modalImage.onload = finishImageLoad;
+    modalImage.onerror = () => {
+        hideImageLoadingState();
+        showToast('Failed to load image');
     };
+
+    modalImage.src = image.fileUrl;
+
+    if (modalImage.complete && modalImage.naturalWidth > 0) {
+        finishImageLoad();
+    }
 }
 
 function updateTags(tags) {
@@ -335,7 +368,7 @@ generateTagsButton.addEventListener('click', async () => {
 });
 
 closeButton.addEventListener('click', () => {
-    window.close();
+    ipcRenderer.send('hide-image-modal');
 });
 
 // Clean up panzoom when window is closed
