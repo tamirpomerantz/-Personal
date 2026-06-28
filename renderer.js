@@ -6,6 +6,7 @@ const AIService = require('./services/aiService');
 const SettingsService = require('./services/settingsService');
 const DataService = require('./services/dataService');
 const DOMManager = require('./services/domManager');
+const SidebarManager = require('./services/sidebarManager');
 const path = require('path');
 const fs = require('fs');
 
@@ -74,11 +75,8 @@ document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
         
         if (document.activeElement === searchInput) {
-            searchInput.innerText = ''; // Clear the input
-            searchInput.blur(); // Unfocus the input field
-            searchHint.classList.add('hidden');
-            searchService.setSearchQuery("", searchTypeSelect.value);
-            domManager.updateVisibleImages("", searchTypeSelect.value);
+            applySearch('', { updateInput: true });
+            searchInput.blur();
         } else {
             ipcRenderer.send('close-window');
         }
@@ -87,6 +85,43 @@ document.addEventListener('keydown', (event) => {
   
 // Initialize DOM Manager
 const domManager = new DOMManager(imageGrid, searchService);
+
+function placeCursorAtEnd(element) {
+    const range = document.createRange();
+    const selection = window.getSelection();
+    range.selectNodeContents(element);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
+function applySearch(query, { recordRecent = false, updateInput = false } = {}) {
+    if (updateInput && searchInput.innerText !== query) {
+        searchInput.innerText = query;
+        placeCursorAtEnd(searchInput);
+    }
+
+    searchService.setSearchQuery(query, searchTypeSelect.value);
+    domManager.updateVisibleImages(query, searchTypeSelect.value);
+    sidebarManager.setActiveQuery(query);
+
+    if (query.length > 0) {
+        searchHint.classList.remove('hidden');
+    } else {
+        searchHint.classList.add('hidden');
+    }
+
+    if (recordRecent && query.trim()) {
+        sidebarManager.addRecentSearch(query);
+    }
+}
+
+const sidebarManager = new SidebarManager(settingsService, (query) => {
+    applySearch(query, { recordRecent: true, updateInput: true });
+    searchInput.focus();
+});
+
+sidebarManager.render();
 
 // Set up image click handler
 domManager.setImageClickHandler(showImageModal);
@@ -111,23 +146,28 @@ async function initializeApp() {
     // Set up ImageService event listeners
     imageService.on('image-added', (imageData) => {
         domManager.handleImageAdded(imageData);
+        sidebarManager.updateTopTags(domManager.allImages);
     });
 
     imageService.on('image-deleted', (fileName) => {
         domManager.handleImageDeleted(fileName);
+        sidebarManager.updateTopTags(domManager.allImages);
     });
 
     imageService.on('image-updated', (imageData) => {
         domManager.handleImageUpdated(imageData);
+        sidebarManager.updateTopTags(domManager.allImages);
     });
 
     imageService.on('store-cleared', () => {
         domManager.handleStoreCleared();
+        sidebarManager.updateTopTags([]);
     });
 
     // Add handler for processed images
     imageService.on('image-processed', (processedData) => {
         domManager.handleImageProcessed(processedData);
+        sidebarManager.updateTopTags(domManager.allImages);
     });
 
     // Listen for updates from modal window
@@ -149,6 +189,7 @@ async function initializeApp() {
         if (currentQuery) {
             domManager.updateVisibleImages(currentQuery, searchService.currentSearchType);
         }
+        sidebarManager.updateTopTags(domManager.allImages);
     });
 
 }
@@ -161,6 +202,7 @@ async function loadImages() {
         
         const images = await imageService.loadImages();
         domManager.setImages(images);
+        sidebarManager.updateTopTags(images);
         
         // Hide loading indicator once initial images are displayed
         domManager.hideLoadingIndicator();
@@ -292,18 +334,22 @@ function saveSettings() {
 
 // Event Listeners
 searchInput.addEventListener('input', () => {
-    searchService.setSearchQuery(searchInput.innerText, searchTypeSelect.value);
-    domManager.updateVisibleImages(searchInput.innerText, searchTypeSelect.value);
-    if (searchInput.innerText.length > 0) {
-        searchHint.classList.remove('hidden');
-    } else {
-        searchHint.classList.add('hidden');
+    applySearch(searchInput.innerText);
+});
+
+searchInput.addEventListener('blur', () => {
+    sidebarManager.addRecentSearch(searchInput.innerText);
+});
+
+searchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sidebarManager.addRecentSearch(searchInput.innerText);
     }
 });
 
 searchTypeSelect.addEventListener('change', () => {
-    searchService.setSearchQuery(searchInput.innerText, searchTypeSelect.value);
-    domManager.updateVisibleImages(searchInput.innerText, searchTypeSelect.value);
+    applySearch(searchInput.innerText);
 });
 
 shuffleButton.addEventListener('click', () => {

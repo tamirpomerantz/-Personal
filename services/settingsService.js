@@ -27,7 +27,8 @@ class SettingsService {
             },
             search: {
                 imagesPerPage: 12,
-                defaultSearchType: 'all' // 'all', 'ocr', 'tags', 'title'
+                defaultSearchType: 'all', // 'all', 'ocr', 'tags', 'title'
+                recentSearches: []
             }
         };
 
@@ -84,7 +85,8 @@ class SettingsService {
         const settings = this.dataService.getSettings();
         return settings?.search || {
             imagesPerPage: 12,
-            defaultSearchType: 'all'
+            defaultSearchType: 'all',
+            recentSearches: []
         };
     }
 

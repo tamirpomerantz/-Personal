@@ -45,7 +45,8 @@ class DataService {
                     },
                     search: {
                         imagesPerPage: 12,
-                        defaultSearchType: 'all'
+                        defaultSearchType: 'all',
+                        recentSearches: []
                     }
                 };
                 this.saveSettings();

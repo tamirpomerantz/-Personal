@@ -9,6 +9,20 @@
     <link rel="stylesheet" href="styles/m.css">
 </head>
 <body>
+    <div class="app-layout">
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-inner">
+            <section class="sidebar-section">
+                <h3 class="sidebar-heading">Recent Searches</h3>
+                <div id="recentSearches" class="sidebar-list"></div>
+            </section>
+            <section class="sidebar-section">
+                <h3 class="sidebar-heading">Top Tags</h3>
+                <div id="topTags" class="sidebar-list"></div>
+            </section>
+        </div>
+    </aside>
+    <div class="main-content">
     <div class="header">
         <div class="button--icon-only drag-handle button button--secondary">
             <i data-feather="move"></i>
@@ -54,7 +68,9 @@
         <div class="blurspan">d</div>
 </div>
     <div id="imageGrid" class="grid-container"></div>
-   
+    </div>
+    </div>
+
     <div id="settingsModal" class="settings-modal">
         <div class="settings-content">
             <div class="settings-header">
